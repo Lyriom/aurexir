@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="256 26 188 188" role="img" aria-label="Emblema Aurexir">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eccd8f"/>
+      <stop offset="50%" stop-color="#b8863b"/>
+      <stop offset="100%" stop-color="#7a5a25"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Gema hexagonal -->
+  <polygon points="340,48 402,84 402,156 340,192 278,156 278,84" fill="#15161b" stroke="url(#goldGrad)" stroke-width="1.5"/>
+
+  <!-- Facetas internas -->
+  <line x1="340" y1="66" x2="340" y2="174" stroke="url(#goldGrad)" stroke-width="0.5" opacity="0.35"/>
+  <line x1="296" y1="90" x2="384" y2="150" stroke="url(#goldGrad)" stroke-width="0.5" opacity="0.25"/>
+  <line x1="384" y1="90" x2="296" y2="150" stroke="url(#goldGrad)" stroke-width="0.5" opacity="0.25"/>
+
+  <!-- Monograma A -->
+  <path d="M 340 72 L 308 162" fill="none" stroke="url(#goldGrad)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M 340 72 L 372 162" fill="none" stroke="url(#goldGrad)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M 320 132 L 360 132" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Acentos cian -->
+  <circle cx="340" cy="72" r="4.5" fill="#3fd0e0"/>
+  <path d="M 396 168 L 422 148" fill="none" stroke="#3fd0e0" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+</svg>
