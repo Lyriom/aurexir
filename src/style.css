@@ -1,0 +1,154 @@
+/* ============================================================
+   AUREXIR — Estilos globales
+   Paleta (empaque · web · redes):
+   - Ónix      #0D0E12  fondo principal, profundidad y sofisticación
+   - Gunmetal  #2A2D34  superficie secundaria, metálico y sobrio
+   - Bronce    #B8863B  color insignia, cálido y premium
+   - Cian hielo #3FD0E0 acento futurista: detalles, hovers, luces
+   - Titanio   #B8BCC2  texto secundario, detalles metálicos claros
+   Sitio en modo oscuro único: la marca vive sobre ónix.
+   ============================================================ */
+
+:root {
+  /* Marca */
+  --onix: #0d0e12;
+  --gunmetal: #2a2d34;
+  --bronce: #b8863b;
+  --bronce-light: #e8c78a;
+  --bronce-deep: #7a5a25;
+  --cian: #3fd0e0;
+  --titanio: #b8bcc2;
+
+  /* Roles */
+  --bg: var(--onix);
+  --bg-soft: #12141a;
+  --bg-elevated: #171921;
+  --border: #262933;
+  --text: #f0efec;
+  --text-muted: #8e939c;
+  --text-secondary: var(--titanio);
+  --accent: var(--bronce);
+  --accent-contrast: #0d0e12;
+  --hover: var(--cian);
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  --gold-grad: linear-gradient(120deg, #e8c78a 0%, #b8863b 55%, #7a5a25 100%);
+
+  /* Tipografía */
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+
+  /* Métricas */
+  --maxw: 1200px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --header-h: 76px;
+  --transition: 0.25s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.12;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Utilidades de layout */
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.section {
+  padding: 96px 0;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+/* Texto con degradado dorado (wordmark, cifras) */
+.gold-text {
+  background: var(--gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform var(--transition), background-color var(--transition),
+    color var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.btn-primary:hover {
+  background-color: var(--bronce-light);
+  box-shadow: 0 10px 30px rgba(184, 134, 59, 0.28);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text);
+  border-color: var(--gunmetal);
+}
+
+.btn-ghost:hover {
+  border-color: var(--hover);
+  color: var(--hover);
+}
