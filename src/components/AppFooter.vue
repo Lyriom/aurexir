@@ -25,11 +25,11 @@ const year = new Date().getFullYear()
       <div class="footer-col">
         <h4>{{ t('footer.followTitle') }}</h4>
         <a
-          href="https://www.instagram.com/aurexir"
+          href="https://www.instagram.com/lyriom__"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Instagram"
-          >Instagram</a
+          aria-label="Instagram @lyriom__"
+          >@lyriom__</
         >
       </div>
     </div>

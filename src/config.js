@@ -9,7 +9,7 @@
 import { locale } from './i18n.js'
 
 export const WHATSAPP_NUMBER = ''
-export const INSTAGRAM_DM_URL = 'https://ig.me/m/aurexir'
+export const INSTAGRAM_DM_URL = 'https://ig.me/m/lyriom__'
 
 // Construye el enlace de WhatsApp con un mensaje pre-rellenado, según el idioma.
 export function whatsappLink(product) {
