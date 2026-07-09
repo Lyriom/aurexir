@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
-import BottleArt from './BottleArt.vue'
+import { computed, watch, onUnmounted } from 'vue'
 import { instagramLink, openInstagramOrder, whatsappLink } from '../config.js'
 
 const props = defineProps({
@@ -12,26 +11,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-// Formato seleccionado (se reinicia al abrir otro perfume).
-const selectedSize = ref(null)
-watch(
-  () => props.product,
-  (p) => {
-    selectedSize.value = p?.variants?.[0]?.size ?? null
-  }
-)
-
-const activeVariant = computed(() => {
-  const variants = props.product?.variants || []
-  return variants.find((v) => v.size === selectedSize.value) || variants[0] || null
-})
-const activePrice = computed(() => activeVariant.value?.price ?? 0)
-
-// Objeto para los enlaces de pedido con el formato y precio elegidos.
+// Objeto para los enlaces de pedido (marca + nombre + precio).
 const orderInfo = computed(() => ({
-  name: props.product?.name,
-  size: selectedSize.value || '',
-  price: activePrice.value,
+  name: props.product ? `${props.product.brand} — ${props.product.name}` : '',
+  price: props.product?.price ?? 0,
 }))
 
 function formatPrice(value) {
@@ -82,13 +65,18 @@ onUnmounted(() => {
           </svg>
         </button>
 
-        <div class="modal" role="dialog" aria-modal="true" :aria-label="product.name">
+        <div class="modal" role="dialog" aria-modal="true" :aria-label="`${product.brand} ${product.name}`">
           <div class="modal-media" :class="`modal-media--${product.tone}`">
-            <BottleArt :tone="product.tone" class="modal-bottle" />
+            <img
+              :src="product.image"
+              :alt="`${product.brand} ${product.name}`"
+              class="modal-photo"
+              decoding="async"
+            />
           </div>
 
           <div class="modal-body">
-            <p class="modal-line">{{ product.line }}</p>
+            <p class="modal-line">{{ product.brand }} · {{ product.line }}</p>
             <h3 class="modal-name">{{ product.name }}</h3>
             <p class="modal-desc">{{ product.desc }}</p>
 
@@ -98,23 +86,7 @@ onUnmounted(() => {
               <li><span>Fondo</span><strong>{{ product.notes.fondo }}</strong></li>
             </ul>
 
-            <div class="size-picker">
-              <span class="size-label">Formato</span>
-              <div class="size-options">
-                <button
-                  v-for="v in product.variants"
-                  :key="v.size"
-                  type="button"
-                  class="size-btn"
-                  :class="{ active: v.size === selectedSize }"
-                  @click="selectedSize = v.size"
-                >
-                  {{ v.size }}
-                </button>
-              </div>
-            </div>
-
-            <p class="modal-price">{{ formatPrice(activePrice) }}</p>
+            <p class="modal-price">{{ formatPrice(product.price) }}</p>
 
             <p class="modal-note">Puedes pedir por Instagram o WhatsApp.</p>
 
@@ -225,30 +197,42 @@ onUnmounted(() => {
 }
 
 .modal-media {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   aspect-ratio: 1 / 1;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(232, 199, 138, 0.12), transparent 58%),
-    var(--bg-soft);
+  padding: 28px;
+  background: radial-gradient(circle at 50% 20%, #ffffff, #e7e9ed 82%);
 }
 
-.modal-media--cian {
-  background:
-    radial-gradient(circle at 50% 12%, rgba(63, 208, 224, 0.14), transparent 58%),
-    var(--bg-soft);
+.modal-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 6%, rgba(184, 134, 59, 0.18), transparent 55%);
+  pointer-events: none;
 }
 
-.modal-media--titanio {
-  background:
-    radial-gradient(circle at 50% 12%, rgba(184, 188, 194, 0.14), transparent 58%),
-    var(--bg-soft);
+.modal-media--cian::before {
+  background: radial-gradient(circle at 50% 6%, rgba(63, 208, 224, 0.16), transparent 55%);
 }
 
-.modal-bottle {
-  width: 62%;
-  max-width: 240px;
+.modal-media--titanio::before {
+  background: radial-gradient(circle at 50% 6%, rgba(120, 124, 134, 0.14), transparent 55%);
+}
+
+.modal-media--noir::before {
+  background: radial-gradient(circle at 50% 6%, rgba(13, 14, 18, 0.12), transparent 55%);
+}
+
+.modal-photo {
+  position: relative;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.28));
 }
 
 .modal-body {
@@ -304,50 +288,6 @@ onUnmounted(() => {
   font-weight: 500;
   font-size: 0.92rem;
   text-align: right;
-}
-
-.size-picker {
-  margin: 0 0 18px;
-}
-
-.size-label {
-  display: block;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-}
-
-.size-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.size-btn {
-  min-width: 72px;
-  padding: 9px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background-color: var(--bg);
-  color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color var(--transition), background-color var(--transition),
-    color var(--transition);
-}
-
-.size-btn:hover {
-  border-color: var(--hover);
-  color: var(--hover);
-}
-
-.size-btn.active {
-  background-color: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
 }
 
 .modal-price {
@@ -437,10 +377,10 @@ onUnmounted(() => {
   }
   .modal-media {
     aspect-ratio: auto;
-    padding: 18px 10px 6px;
+    padding: 20px 10px 14px;
   }
-  .modal-bottle {
-    max-height: 30vh;
+  .modal-photo {
+    max-height: 34vh;
     width: auto;
   }
   .modal-body {

@@ -1,5 +1,4 @@
 <script setup>
-import BottleArt from './BottleArt.vue'
 import { instagramLink, openInstagramOrder, whatsappLink } from '../config.js'
 
 const props = defineProps({
@@ -18,14 +17,10 @@ function formatPrice(value) {
   }).format(value)
 }
 
-// El precio "desde" es el de la variante más pequeña.
-const minPrice = Math.min(...props.product.variants.map((v) => v.price))
-
-// Datos mínimos para el mensaje de pedido desde la tarjeta.
+// Datos para el mensaje de pedido desde la tarjeta (marca + nombre + precio).
 const orderInfo = {
-  name: props.product.name,
-  size: props.product.variants[0]?.size,
-  price: minPrice,
+  name: `${props.product.brand} — ${props.product.name}`,
+  price: props.product.price,
 }
 </script>
 
@@ -39,16 +34,22 @@ const orderInfo = {
     @keydown.space.prevent="$emit('select', product)"
   >
     <div class="card-media" :class="`card-media--${product.tone}`">
-      <BottleArt :tone="product.tone" class="card-bottle" />
+      <img
+        :src="product.image"
+        :alt="`${product.brand} ${product.name}`"
+        class="card-photo"
+        loading="lazy"
+        decoding="async"
+      />
       <span v-if="product.tag" class="card-tag">{{ product.tag }}</span>
     </div>
 
     <div class="card-body">
-      <p class="card-line">{{ product.line }}</p>
+      <p class="card-line">{{ product.brand }}</p>
       <h3 class="card-name">{{ product.name }}</h3>
       <p class="card-notes">{{ product.notes.fondo }}</p>
       <div class="card-footer">
-        <span class="card-price">Desde {{ formatPrice(minPrice) }}</span>
+        <span class="card-price">{{ formatPrice(product.price) }}</span>
         <div class="card-actions">
           <a
             :href="whatsappLink(orderInfo)"
@@ -109,32 +110,44 @@ const orderInfo = {
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 50% 8%, rgba(232, 199, 138, 0.1), transparent 55%),
-    var(--bg-soft);
+  padding: 20px;
+  /* Panel claro tipo estudio: la foto de producto (fondo blanco) se funde. */
+  background: radial-gradient(circle at 50% 20%, #ffffff, #e7e9ed 82%);
   overflow: hidden;
 }
 
-/* Halo de fondo según el tono del frasco */
-.card-media--cian {
-  background:
-    radial-gradient(circle at 50% 8%, rgba(63, 208, 224, 0.12), transparent 55%),
-    var(--bg-soft);
+/* Halo de color según el tono, sutil sobre el panel claro. */
+.card-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 4%, rgba(184, 134, 59, 0.18), transparent 55%);
+  pointer-events: none;
 }
 
-.card-media--titanio {
-  background:
-    radial-gradient(circle at 50% 8%, rgba(184, 188, 194, 0.12), transparent 55%),
-    var(--bg-soft);
+.card-media--cian::before {
+  background: radial-gradient(circle at 50% 4%, rgba(63, 208, 224, 0.16), transparent 55%);
 }
 
-.card-bottle {
-  width: 56%;
-  max-width: 170px;
+.card-media--titanio::before {
+  background: radial-gradient(circle at 50% 4%, rgba(120, 124, 134, 0.14), transparent 55%);
+}
+
+.card-media--noir::before {
+  background: radial-gradient(circle at 50% 4%, rgba(13, 14, 18, 0.12), transparent 55%);
+}
+
+.card-photo {
+  position: relative;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.26));
   transition: transform var(--transition);
 }
 
-.card:hover .card-bottle {
+.card:hover .card-photo {
   transform: translateY(-4px) scale(1.03);
 }
 

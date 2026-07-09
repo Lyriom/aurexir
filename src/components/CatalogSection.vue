@@ -31,11 +31,11 @@ const selected = ref(null)
       <header class="catalog-head">
         <div>
           <span class="eyebrow">Colección</span>
-          <h2 class="catalog-title">Fragancias de autor</h2>
+          <h2 class="catalog-title">Fragancias seleccionadas</h2>
         </div>
         <p class="catalog-sub">
-          Seis composiciones con carácter propio. Toca cualquier frasco para ver
-          su pirámide olfativa y pedirla por Instagram o WhatsApp.
+          Veinte fragancias de casas de diseñador y nicho. Toca cualquiera para
+          ver su pirámide olfativa y pedirla por Instagram o WhatsApp.
         </p>
       </header>
 
