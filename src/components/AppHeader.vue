@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import LangSwitch from './LangSwitch.vue'
+import { t } from '../i18n.js'
 
 const scrolled = ref(false)
 const menuOpen = ref(false)
@@ -12,16 +14,16 @@ onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const links = [
-  { label: 'Inicio', href: '#inicio' },
-  { label: 'Colección', href: '#coleccion' },
-  { label: 'La esencia', href: '#esencia' },
+  { key: 'nav.home', href: '#inicio' },
+  { key: 'nav.collection', href: '#coleccion' },
+  { key: 'nav.essence', href: '#esencia' },
 ]
 </script>
 
 <template>
   <header class="header" :class="{ 'is-scrolled': scrolled }">
     <div class="container header-inner">
-      <a href="#inicio" class="brand" aria-label="AUREXIR — Inicio">
+      <a href="#inicio" class="brand" :aria-label="t('header.home')">
         <img src="/logo-mark.svg" alt="" class="brand-logo" />
         <span class="brand-word gold-text">AUREXIR</span>
       </a>
@@ -34,17 +36,18 @@ const links = [
           class="nav-link"
           @click="menuOpen = false"
         >
-          {{ link.label }}
+          {{ t(link.key) }}
         </a>
       </nav>
 
       <div class="header-actions">
-        <a href="#coleccion" class="btn btn-primary header-cta">Comprar</a>
+        <LangSwitch />
+        <a href="#coleccion" class="btn btn-primary header-cta">{{ t('header.buy') }}</a>
 
         <button
           class="icon-btn menu-toggle"
           type="button"
-          aria-label="Abrir menú"
+          :aria-label="t('header.menu')"
           @click="menuOpen = !menuOpen"
         >
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">

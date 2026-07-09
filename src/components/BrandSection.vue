@@ -1,21 +1,11 @@
 <script setup>
-// "La esencia": pilares de marca. Contenido estático.
+// "La casa": pilares de marca. Textos vía i18n.
+import { t } from '../i18n.js'
+
 const pillars = [
-  {
-    title: 'Esencias nobles',
-    text: 'Materias primas de origen certificado: oud, ámbar, vetiver y flores absolutas trabajadas en alta concentración.',
-    icon: 'drop',
-  },
-  {
-    title: 'Diseño futurista',
-    text: 'Frascos facetados como gemas de ónix con detalles en bronce y una luz cian que firma cada pieza.',
-    icon: 'hex',
-  },
-  {
-    title: 'Estela duradera',
-    text: 'Composiciones pensadas para durar más de doce horas en piel y dejar huella al pasar.',
-    icon: 'spark',
-  },
+  { titleKey: 'brand.pillars.p1Title', textKey: 'brand.pillars.p1Text', icon: 'drop' },
+  { titleKey: 'brand.pillars.p2Title', textKey: 'brand.pillars.p2Text', icon: 'hex' },
+  { titleKey: 'brand.pillars.p3Title', textKey: 'brand.pillars.p3Text', icon: 'spark' },
 ]
 </script>
 
@@ -23,16 +13,13 @@ const pillars = [
   <section id="esencia" class="section brand">
     <div class="container">
       <header class="brand-head">
-        <span class="eyebrow">La esencia</span>
-        <h2 class="brand-title">Una firma, no un perfume</h2>
-        <p class="brand-sub">
-          AUREXIR nace para el hombre que entiende el aroma como parte de su
-          identidad: sobrio de día, magnético de noche.
-        </p>
+        <span class="eyebrow">{{ t('brand.eyebrow') }}</span>
+        <h2 class="brand-title">{{ t('brand.title') }}</h2>
+        <p class="brand-sub">{{ t('brand.subtitle') }}</p>
       </header>
 
       <div class="pillars">
-        <article v-for="pillar in pillars" :key="pillar.title" class="pillar">
+        <article v-for="pillar in pillars" :key="pillar.titleKey" class="pillar">
           <div class="pillar-icon" aria-hidden="true">
             <!-- Gota -->
             <svg v-if="pillar.icon === 'drop'" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
@@ -48,8 +35,8 @@ const pillars = [
               <path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3z" />
             </svg>
           </div>
-          <h3 class="pillar-title">{{ pillar.title }}</h3>
-          <p class="pillar-text">{{ pillar.text }}</p>
+          <h3 class="pillar-title">{{ t(pillar.titleKey) }}</h3>
+          <p class="pillar-text">{{ t(pillar.textKey) }}</p>
         </article>
       </div>
     </div>

@@ -1,37 +1,39 @@
 <script setup>
-// Sección de presentación de la marca. Contenido estático.
+// Sección de presentación de la marca. Textos vía i18n; stats derivados del catálogo.
+import { computed } from 'vue'
+import { t } from '../i18n.js'
+import { products } from '../data/products.js'
+
+const productCount = products.length
+const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
 </script>
 
 <template>
   <section id="inicio" class="hero">
     <div class="container hero-inner">
       <div class="hero-copy">
-        <span class="eyebrow">Parfum Homme · Colección 2026</span>
+        <span class="eyebrow">{{ t('hero.eyebrow') }}</span>
         <h1 class="hero-title">
-          El elixir de quienes <span class="accent">dejan estela</span>.
+          {{ t('hero.titleLead') }} <span class="accent">{{ t('hero.titleAccent') }}</span>.
         </h1>
-        <p class="hero-text">
-          AUREXIR es perfumería masculina de autor: fragancias concentradas,
-          frascos con diseño futurista y esencias de origen noble. Piezas para
-          quienes entienden el aroma como una firma.
-        </p>
+        <p class="hero-text">{{ t('hero.text') }}</p>
         <div class="hero-cta">
-          <a href="#coleccion" class="btn btn-primary">Ver colección</a>
-          <a href="#esencia" class="btn btn-ghost">La esencia</a>
+          <a href="#coleccion" class="btn btn-primary">{{ t('hero.ctaCollection') }}</a>
+          <a href="#esencia" class="btn btn-ghost">{{ t('hero.ctaEssence') }}</a>
         </div>
 
         <div class="hero-stats">
           <div class="stat">
-            <strong class="gold-text">06</strong>
-            <span>fragancias de autor</span>
+            <strong class="gold-text">{{ productCount }}</strong>
+            <span>{{ t('hero.statFragrances') }}</span>
           </div>
           <div class="stat">
-            <strong class="gold-text">+12 h</strong>
-            <span>de estela en piel</span>
+            <strong class="gold-text">{{ brandCount }}</strong>
+            <span>{{ t('hero.statHouses') }}</span>
           </div>
           <div class="stat">
-            <strong class="gold-text">100%</strong>
-            <span>esencias de origen noble</span>
+            <strong class="gold-text">24/7</strong>
+            <span>{{ t('hero.statOrders') }}</span>
           </div>
         </div>
       </div>

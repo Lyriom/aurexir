@@ -3,22 +3,24 @@ import { ref, computed } from 'vue'
 import ProductCard from './ProductCard.vue'
 import ProductModal from './ProductModal.vue'
 import { products } from '../data/products.js'
+import { t } from '../i18n.js'
 
 /*
  * Colección de AUREXIR. Maqueta solo front: los perfumes salen de
- * src/data/products.js. Los filtros se derivan de las líneas existentes.
+ * src/data/products.js. Los filtros se derivan de las categorías (clave)
+ * presentes en el catálogo; la etiqueta visible sale de i18n (filters.*).
  */
-const lines = computed(() => [
-  'Todas',
-  ...Array.from(new Set(products.map((p) => p.line))),
+const categories = computed(() => [
+  'all',
+  ...Array.from(new Set(products.map((p) => p.category))),
 ])
 
-const activeLine = ref('Todas')
+const activeCategory = ref('all')
 
 const filteredProducts = computed(() =>
-  activeLine.value === 'Todas'
+  activeCategory.value === 'all'
     ? products
-    : products.filter((p) => p.line === activeLine.value)
+    : products.filter((p) => p.category === activeCategory.value)
 )
 
 // Perfume seleccionado para el modal de detalle (null = cerrado).
@@ -30,25 +32,22 @@ const selected = ref(null)
     <div class="container">
       <header class="catalog-head">
         <div>
-          <span class="eyebrow">Colección</span>
-          <h2 class="catalog-title">Fragancias seleccionadas</h2>
+          <span class="eyebrow">{{ t('catalog.eyebrow') }}</span>
+          <h2 class="catalog-title">{{ t('catalog.title') }}</h2>
         </div>
-        <p class="catalog-sub">
-          Veinte fragancias de casas de diseñador y nicho. Toca cualquiera para
-          ver su pirámide olfativa y pedirla por Instagram o WhatsApp.
-        </p>
+        <p class="catalog-sub">{{ t('catalog.subtitle') }}</p>
       </header>
 
-      <div class="filters" role="tablist" aria-label="Filtrar por línea">
+      <div class="filters" role="tablist" :aria-label="t('catalog.eyebrow')">
         <button
-          v-for="line in lines"
-          :key="line"
+          v-for="cat in categories"
+          :key="cat"
           class="filter"
-          :class="{ active: activeLine === line }"
+          :class="{ active: activeCategory === cat }"
           type="button"
-          @click="activeLine = line"
+          @click="activeCategory = cat"
         >
-          {{ line }}
+          {{ t(`filters.${cat}`) }}
         </button>
       </div>
 

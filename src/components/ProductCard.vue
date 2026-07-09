@@ -1,5 +1,6 @@
 <script setup>
 import { instagramLink, openInstagramOrder, whatsappLink } from '../config.js'
+import { locale, t } from '../i18n.js'
 
 const props = defineProps({
   product: {
@@ -41,13 +42,13 @@ const orderInfo = {
         loading="lazy"
         decoding="async"
       />
-      <span v-if="product.tag" class="card-tag">{{ product.tag }}</span>
+      <span v-if="product.tag" class="card-tag">{{ t(`tags.${product.tag}`) }}</span>
     </div>
 
     <div class="card-body">
       <p class="card-line">{{ product.brand }}</p>
       <h3 class="card-name">{{ product.name }}</h3>
-      <p class="card-notes">{{ product.notes.fondo }}</p>
+      <p class="card-notes">{{ product.notes.base[locale] }}</p>
       <div class="card-footer">
         <span class="card-price">{{ formatPrice(product.price) }}</span>
         <div class="card-actions">

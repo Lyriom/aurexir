@@ -1,5 +1,6 @@
 <script setup>
-// Footer estático. La info de contacto/enlaces se podrá alimentar luego.
+// Footer. Textos vía i18n; la info de contacto/enlaces se podrá alimentar luego.
+import { t } from '../i18n.js'
 const year = new Date().getFullYear()
 </script>
 
@@ -11,21 +12,18 @@ const year = new Date().getFullYear()
           <img src="/logo-mark.svg" alt="AUREXIR" />
           <span class="footer-word gold-text">AUREXIR</span>
         </div>
-        <p>
-          Perfumería masculina de autor. Fragancias con carácter, frascos con
-          diseño futurista y una estela que firma tu presencia.
-        </p>
+        <p>{{ t('footer.text') }}</p>
       </div>
 
       <div class="footer-col">
-        <h4>Tienda</h4>
-        <a href="#coleccion">Colección</a>
-        <a href="#coleccion">Novedades</a>
-        <a href="#coleccion">Best sellers</a>
+        <h4>{{ t('footer.shopTitle') }}</h4>
+        <a href="#coleccion">{{ t('footer.shopCollection') }}</a>
+        <a href="#coleccion">{{ t('footer.shopNew') }}</a>
+        <a href="#coleccion">{{ t('footer.shopBest') }}</a>
       </div>
 
       <div class="footer-col">
-        <h4>Síguenos</h4>
+        <h4>{{ t('footer.followTitle') }}</h4>
         <a
           href="https://www.instagram.com/aurexir"
           target="_blank"
@@ -38,8 +36,8 @@ const year = new Date().getFullYear()
 
     <div class="footer-bottom">
       <div class="container footer-bottom-inner">
-        <span>© {{ year }} AUREXIR. Todos los derechos reservados.</span>
-        <span class="footer-soft">Parfum Homme · Próximamente tienda online</span>
+        <span>© {{ year }} AUREXIR. {{ t('footer.rights') }}</span>
+        <span class="footer-soft">{{ t('footer.soft') }}</span>
       </div>
     </div>
   </footer>

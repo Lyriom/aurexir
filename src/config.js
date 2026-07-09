@@ -6,16 +6,18 @@
  *    Mientras esté vacío, el botón abre WhatsApp sin destinatario fijo.
  * 👉 INSTAGRAM_DM_URL: enlace directo para escribir por DM en Instagram.
  */
+import { locale } from './i18n.js'
+
 export const WHATSAPP_NUMBER = ''
 export const INSTAGRAM_DM_URL = 'https://ig.me/m/aurexir'
 
-// Construye el enlace de WhatsApp con un mensaje pre-rellenado para el perfume.
+// Construye el enlace de WhatsApp con un mensaje pre-rellenado, según el idioma.
 export function whatsappLink(product) {
+  const price = product?.price ? ` · ${locale.value === 'en' ? 'Price' : 'Precio'}: $${product.price}` : ''
   const msg =
-    `Hola AUREXIR ✦, me interesa *${product.name}*` +
-    (product.size ? ` · ${product.size}` : '') +
-    (product.price ? ` · Precio: $${product.price}` : '') +
-    '. ¿Está disponible?'
+    locale.value === 'en'
+      ? `Hi AUREXIR ✦, I'm interested in *${product.name}*${price}. Is it available?`
+      : `Hola AUREXIR ✦, me interesa *${product.name}*${price}. ¿Está disponible?`
   const base = WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}` : 'https://wa.me/'
   return `${base}?text=${encodeURIComponent(msg)}`
 }
@@ -25,11 +27,12 @@ export function instagramLink() {
 }
 
 export function instagramMessage(product) {
-  return (
-    `Hola AUREXIR, busco más información sobre ${product?.name || 'esta fragancia'}` +
-    (product?.size ? ` · ${product.size}` : '') +
-    (product?.price ? ` · Precio: $${product.price}` : '')
-  )
+  const en = locale.value === 'en'
+  const name = product?.name || (en ? 'this fragrance' : 'esta fragancia')
+  const price = product?.price ? ` · ${en ? 'Price' : 'Precio'}: $${product.price}` : ''
+  return en
+    ? `Hi AUREXIR, I'd like more info about ${name}${price}`
+    : `Hola AUREXIR, busco más información sobre ${name}${price}`
 }
 
 function copyWithFallback(text) {
