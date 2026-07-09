@@ -29,7 +29,7 @@ const year = new Date().getFullYear()
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram @lyriom__"
-          >@lyriom__</
+          >@lyriom__</a
         >
       </div>
     </div>
