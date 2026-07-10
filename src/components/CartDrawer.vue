@@ -1,0 +1,438 @@
+<script setup>
+// Panel lateral del carrito. Estado y acciones vienen de store.js.
+import { watch, onMounted, onUnmounted } from 'vue'
+import { t } from '../i18n.js'
+import {
+  cart,
+  cartTotal,
+  cartCount,
+  openCart,
+  closeCart,
+  clearCart,
+  incQty,
+  decQty,
+  removeFromCart,
+  checkoutWhatsAppLink,
+} from '../store.js'
+
+// Deep-link: abrir el carrito al cargar con #cart (p. ej. enlaces externos).
+onMounted(() => {
+  if (typeof window !== 'undefined' && window.location.hash === '#cart') {
+    openCart()
+  }
+})
+
+function formatPrice(value) {
+  return new Intl.NumberFormat('es-EC', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(value)
+}
+
+function onKey(e) {
+  if (e.key === 'Escape') closeCart()
+}
+
+// Bloquea el scroll del fondo y escucha Escape solo con el drawer abierto.
+watch(
+  () => cart.open,
+  (open) => {
+    if (typeof document === 'undefined') return
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      window.addEventListener('keydown', onKey)
+    } else {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKey)
+    }
+  }
+)
+
+onUnmounted(() => {
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = ''
+    window.removeEventListener('keydown', onKey)
+  }
+})
+</script>
+
+<template>
+  <Transition name="drawer">
+    <div v-if="cart.open" class="cart-overlay" @click.self="closeCart">
+      <aside class="cart" role="dialog" aria-modal="true" :aria-label="t('cart.title')">
+        <header class="cart-head">
+          <h2 class="cart-title">
+            {{ t('cart.title') }}
+            <span v-if="cartCount" class="cart-count">
+              {{ cartCount }} {{ cartCount === 1 ? t('cart.itemOne') : t('cart.itemMany') }}
+            </span>
+          </h2>
+          <button class="cart-close" type="button" :aria-label="t('product.close')" @click="closeCart">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </header>
+
+        <!-- Vacío -->
+        <div v-if="!cart.items.length" class="cart-empty">
+          <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 6h15l-1.5 9h-12z" />
+            <path d="M6 6L5 3H2" />
+            <circle cx="9" cy="20" r="1.4" />
+            <circle cx="18" cy="20" r="1.4" />
+          </svg>
+          <p class="cart-empty-title">{{ t('cart.empty') }}</p>
+          <p class="cart-empty-hint">{{ t('cart.emptyHint') }}</p>
+          <a href="#coleccion" class="btn btn-primary" @click="closeCart">{{ t('cart.browse') }}</a>
+        </div>
+
+        <!-- Con productos -->
+        <template v-else>
+          <ul class="cart-list">
+            <li v-for="item in cart.items" :key="item.id" class="cart-item">
+              <div class="cart-thumb">
+                <img :src="item.image" :alt="item.name" loading="lazy" />
+              </div>
+              <div class="cart-info">
+                <p class="cart-item-brand">{{ item.brand }}</p>
+                <p class="cart-item-name">{{ item.name }}</p>
+                <p class="cart-item-price">{{ formatPrice(item.price) }}</p>
+                <div class="cart-qty">
+                  <button type="button" aria-label="−" @click="decQty(item.id)">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14" /></svg>
+                  </button>
+                  <span>{{ item.qty }}</span>
+                  <button type="button" aria-label="+" @click="incQty(item.id)">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="cart-item-side">
+                <span class="cart-item-total">{{ formatPrice(item.price * item.qty) }}</span>
+                <button type="button" class="cart-remove" :aria-label="t('cart.remove')" @click="removeFromCart(item.id)">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" /></svg>
+                </button>
+              </div>
+            </li>
+          </ul>
+
+          <footer class="cart-foot">
+            <button type="button" class="cart-clear" @click="clearCart">{{ t('cart.clear') }}</button>
+            <div class="cart-subtotal">
+              <span>{{ t('cart.subtotal') }}</span>
+              <strong>{{ formatPrice(cartTotal) }}</strong>
+            </div>
+            <p class="cart-note">{{ t('cart.note') }}</p>
+            <a
+              :href="checkoutWhatsAppLink()"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="cart-checkout"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15h-.01c-1.52 0-3.01-.41-4.31-1.18l-.31-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/>
+              </svg>
+              {{ t('cart.checkout') }}
+            </a>
+          </footer>
+        </template>
+      </aside>
+    </div>
+  </Transition>
+</template>
+
+<style scoped>
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  justify-content: flex-end;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.cart {
+  width: min(420px, 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-elevated);
+  border-left: 1px solid var(--border);
+  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.cart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.cart-count {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.cart-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.cart-close:hover {
+  color: var(--hover);
+  border-color: var(--hover);
+}
+
+/* Vacío */
+.cart-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.cart-empty svg {
+  color: var(--gunmetal);
+  margin-bottom: 6px;
+}
+
+.cart-empty-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.cart-empty-hint {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+}
+
+/* Lista */
+.cart-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 12px 16px;
+}
+
+.cart-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-thumb {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 25%, #ffffff, #e7e9ed 85%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+}
+
+.cart-thumb img {
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cart-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-item-brand {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin: 0 0 2px;
+}
+
+.cart-item-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+
+.cart-item-price {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.cart-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 6px;
+}
+
+.cart-qty button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: color var(--transition), background-color var(--transition);
+}
+
+.cart-qty button:hover {
+  color: var(--hover);
+  background-color: var(--bg);
+}
+
+.cart-qty span {
+  min-width: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cart-item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.cart-item-total {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.cart-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  transition: color var(--transition);
+}
+
+.cart-remove:hover {
+  color: #d64545;
+}
+
+/* Pie */
+.cart-foot {
+  padding: 18px 22px 22px;
+  border-top: 1px solid var(--border);
+  background-color: var(--bg-soft);
+}
+
+.cart-clear {
+  display: inline-block;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0 0 12px;
+  transition: color var(--transition);
+}
+
+.cart-clear:hover {
+  color: #d64545;
+}
+
+.cart-subtotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cart-subtotal span {
+  color: var(--text-secondary);
+}
+
+.cart-subtotal strong {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.cart-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+
+.cart-checkout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 52px;
+  border-radius: var(--radius);
+  background-color: #25d366;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: background-color var(--transition), transform var(--transition);
+}
+
+.cart-checkout:hover {
+  background-color: #1ebe5d;
+  transform: translateY(-2px);
+}
+
+/* Transición del drawer */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.25s ease;
+}
+.drawer-enter-active .cart,
+.drawer-leave-active .cart {
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
+}
+.drawer-enter-from .cart,
+.drawer-leave-to .cart {
+  transform: translateX(100%);
+}
+</style>

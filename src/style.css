@@ -152,3 +152,47 @@ h3 {
   border-color: var(--hover);
   color: var(--hover);
 }
+
+/* Sólo lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Encabezado estándar de sección de tienda (título + enlace opcional) */
+.row-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+}
+
+.row-title {
+  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  font-weight: 600;
+}
+
+.row-sub {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 6px 0 0;
+}
+
+/* Ajuste móvil: menos aire vertical y padding lateral más ajustado. */
+@media (max-width: 640px) {
+  .section {
+    padding: 60px 0;
+  }
+  .container {
+    padding: 0 18px;
+  }
+}

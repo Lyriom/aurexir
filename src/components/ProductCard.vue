@@ -1,6 +1,7 @@
 <script setup>
-import { instagramLink, openInstagramOrder, whatsappLink } from '../config.js'
+import { ref, computed } from 'vue'
 import { locale, t } from '../i18n.js'
+import { addToCart } from '../store.js'
 
 const props = defineProps({
   product: {
@@ -18,23 +19,45 @@ function formatPrice(value) {
   }).format(value)
 }
 
-// Datos para el mensaje de pedido desde la tarjeta (marca + nombre + precio).
-const orderInfo = {
-  name: `${props.product.brand} — ${props.product.name}`,
-  price: props.product.price,
+// % de descuento cuando hay precio anterior.
+const discount = computed(() => {
+  if (!props.product.oldPrice) return 0
+  return Math.round((1 - props.product.price / props.product.oldPrice) * 100)
+})
+
+// Insignia principal mostrada sobre la foto (prioridad: oferta > nicho > nuevo > best).
+const badge = computed(() => {
+  const p = props.product
+  if (p.oldPrice) return { key: 'sale', text: `-${discount.value}%`, variant: 'sale' }
+  if (p.tag === 'niche') return { key: 'niche', text: t('tags.niche'), variant: 'niche' }
+  if (p.isNew) return { key: 'new', text: t('tags.new'), variant: 'new' }
+  if (p.isBest) return { key: 'best', text: t('tags.best'), variant: 'best' }
+  return null
+})
+
+const added = ref(false)
+let addedTimer = null
+
+function onAdd() {
+  addToCart(props.product)
+  added.value = true
+  if (addedTimer) clearTimeout(addedTimer)
+  addedTimer = setTimeout(() => (added.value = false), 1400)
 }
 </script>
 
 <template>
-  <article
-    class="card"
-    role="button"
-    tabindex="0"
-    @click="$emit('select', product)"
-    @keydown.enter="$emit('select', product)"
-    @keydown.space.prevent="$emit('select', product)"
-  >
-    <div class="card-media" :class="`card-media--${product.tone}`">
+  <article class="card">
+    <div
+      class="card-media"
+      :class="`card-media--${product.tone}`"
+      role="button"
+      tabindex="0"
+      :aria-label="t('product.viewDetails')"
+      @click="$emit('select', product)"
+      @keydown.enter="$emit('select', product)"
+      @keydown.space.prevent="$emit('select', product)"
+    >
       <img
         :src="product.image"
         :alt="`${product.brand} ${product.name}`"
@@ -42,43 +65,46 @@ const orderInfo = {
         loading="lazy"
         decoding="async"
       />
-      <span v-if="product.tag" class="card-tag">{{ t(`tags.${product.tag}`) }}</span>
+      <span v-if="badge" class="card-badge" :class="`card-badge--${badge.variant}`">
+        {{ badge.text }}
+      </span>
+      <span class="card-view">{{ t('product.viewDetails') }}</span>
     </div>
 
     <div class="card-body">
-      <p class="card-line">{{ product.brand }}</p>
-      <h3 class="card-name">{{ product.name }}</h3>
-      <p class="card-notes">{{ product.notes.base[locale] }}</p>
-      <div class="card-footer">
-        <span class="card-price">{{ formatPrice(product.price) }}</span>
-        <div class="card-actions">
-          <a
-            :href="whatsappLink(orderInfo)"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="card-btn card-btn--wa"
-            aria-label="Pedir por WhatsApp"
-            @click.stop
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-              <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15h-.01c-1.52 0-3.01-.41-4.31-1.18l-.31-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/>
-            </svg>
-          </a>
-          <a
-            :href="instagramLink()"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="card-btn card-btn--ig"
-            aria-label="Pedir por Instagram"
-            @click.stop.prevent="openInstagramOrder(orderInfo)"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="2" y="2" width="20" height="20" rx="5" />
-              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-              <path d="M17.5 6.5h.01" />
-            </svg>
-          </a>
+      <p class="card-brand">{{ product.brand }}</p>
+      <h3 class="card-name" @click="$emit('select', product)">{{ product.name }}</h3>
+
+      <div class="card-rating" :aria-label="`${product.rating} / 5`">
+        <span class="stars" :style="{ '--fill': (product.rating / 5) * 100 + '%' }" aria-hidden="true">
+          <span class="stars-bg">★★★★★</span>
+          <span class="stars-fg">★★★★★</span>
+        </span>
+        <span class="card-reviews">({{ product.reviews }})</span>
+      </div>
+
+      <div class="card-foot">
+        <div class="card-prices">
+          <span class="card-price">{{ formatPrice(product.price) }}</span>
+          <span v-if="product.oldPrice" class="card-oldprice">{{ formatPrice(product.oldPrice) }}</span>
         </div>
+        <button
+          type="button"
+          class="add-btn"
+          :class="{ 'is-added': added }"
+          @click="onAdd"
+        >
+          <svg v-if="!added" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 6h15l-1.5 9h-12z" />
+            <path d="M6 6L5 3H2" />
+            <circle cx="9" cy="20" r="1.4" />
+            <circle cx="18" cy="20" r="1.4" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 12.5l5 5L20 6.5" />
+          </svg>
+          <span>{{ added ? t('product.added') : t('product.addToCart') }}</span>
+        </button>
       </div>
     </div>
   </article>
@@ -92,153 +118,234 @@ const orderInfo = {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  cursor: pointer;
   transition: transform var(--transition), border-color var(--transition),
     box-shadow var(--transition);
 }
 
-.card:hover,
-.card:focus-visible {
+.card:hover {
   transform: translateY(-6px);
   border-color: var(--hover);
   box-shadow: var(--shadow);
-  outline: none;
 }
 
 .card-media {
   position: relative;
-  aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  /* Panel claro tipo estudio: la foto de producto (fondo blanco) se funde. */
-  background: radial-gradient(circle at 50% 20%, #ffffff, #e7e9ed 82%);
+  aspect-ratio: 4 / 5;
+  cursor: pointer;
+  background-color: #090a0e;
   overflow: hidden;
 }
 
-/* Halo de color según el tono, sutil sobre el panel claro. */
+/* Halo de color según el tono, superpuesto sobre la foto de fondo oscuro. */
 .card-media::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 4%, rgba(184, 134, 59, 0.18), transparent 55%);
+  z-index: 1;
+  background: radial-gradient(circle at 50% 0%, rgba(184, 134, 59, 0.22), transparent 60%);
+  mix-blend-mode: screen;
   pointer-events: none;
 }
 
 .card-media--cian::before {
-  background: radial-gradient(circle at 50% 4%, rgba(63, 208, 224, 0.16), transparent 55%);
+  background: radial-gradient(circle at 50% 0%, rgba(63, 208, 224, 0.2), transparent 60%);
 }
-
 .card-media--titanio::before {
-  background: radial-gradient(circle at 50% 4%, rgba(120, 124, 134, 0.14), transparent 55%);
+  background: radial-gradient(circle at 50% 0%, rgba(120, 124, 134, 0.18), transparent 60%);
 }
-
 .card-media--noir::before {
-  background: radial-gradient(circle at 50% 4%, rgba(13, 14, 18, 0.12), transparent 55%);
+  background: radial-gradient(circle at 50% 0%, rgba(184, 134, 59, 0.12), transparent 60%);
 }
 
 .card-photo {
-  position: relative;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
   height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.26));
-  transition: transform var(--transition);
+  object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
 .card:hover .card-photo {
-  transform: translateY(-4px) scale(1.03);
+  transform: scale(1.05);
 }
 
-.card-tag {
+.card-badge {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  z-index: 2;
+  top: 12px;
+  left: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.card-badge--sale {
+  background-color: #d64545;
+}
+.card-badge--new {
+  background-color: var(--cian);
+  color: #06232a;
+}
+.card-badge--best {
   background-color: var(--accent);
   color: var(--accent-contrast);
-  font-size: 0.72rem;
+}
+.card-badge--niche {
+  background-color: #171921;
+  border: 1px solid var(--bronce);
+  color: var(--bronce-light);
+}
+
+.card-view {
+  position: absolute;
+  z-index: 2;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background-color: rgba(13, 14, 18, 0.78);
+  color: #fff;
+  font-size: 0.76rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  padding: 5px 12px;
-  border-radius: 999px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.card-media:hover .card-view,
+.card-media:focus-visible .card-view {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .card-body {
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 18px 18px 20px;
+  padding: 16px 16px 18px;
 }
 
-.card-line {
-  font-size: 0.76rem;
+.card-brand {
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--accent);
-  margin: 0 0 6px;
+  margin: 0 0 5px;
 }
 
 .card-name {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin: 0 0 8px;
+  cursor: pointer;
 }
 
-.card-notes {
-  font-size: 0.84rem;
+.card-name:hover {
+  color: var(--hover);
+}
+
+/* Estrellas */
+.card-rating {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.stars {
+  position: relative;
+  display: inline-block;
+  font-size: 0.9rem;
+  line-height: 1;
+  letter-spacing: 0.05em;
+}
+
+.stars-bg {
+  color: var(--gunmetal);
+}
+
+.stars-fg {
+  position: absolute;
+  inset: 0;
+  width: var(--fill, 0%);
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--bronce-light);
+}
+
+.card-reviews {
+  font-size: 0.78rem;
   color: var(--text-muted);
-  margin: 0 0 14px;
 }
 
-.card-footer {
+.card-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   margin-top: auto;
+}
+
+.card-prices {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
 }
 
 .card-price {
   font-weight: 700;
-  font-size: 1rem;
-  color: var(--text-secondary);
+  font-size: 1.15rem;
+  color: var(--text);
 }
 
-.card-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
+.card-oldprice {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
 }
 
-.card-btn {
+.add-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background-color: var(--bg);
-  color: var(--text);
+  gap: 7px;
+  padding: 10px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background-color: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color var(--transition), color var(--transition),
     border-color var(--transition), transform var(--transition);
 }
 
-.card-btn--wa:hover {
-  background-color: #25d366;
-  color: #fff;
-  border-color: #25d366;
-  transform: scale(1.08);
+.add-btn:hover {
+  background-color: var(--accent);
+  color: var(--accent-contrast);
+  transform: translateY(-1px);
 }
 
-.card-btn--ig:hover {
-  background-color: #e1306c;
-  color: #fff;
-  border-color: #e1306c;
-  transform: scale(1.08);
+.add-btn.is-added {
+  background-color: var(--cian);
+  border-color: var(--cian);
+  color: #06232a;
+}
+
+@media (max-width: 400px) {
+  .add-btn span {
+    display: none;
+  }
+  .add-btn {
+    padding: 10px 12px;
+  }
 }
 </style>

@@ -1,11 +1,14 @@
 <script setup>
-// Sección de presentación de la marca. Textos vía i18n; stats derivados del catálogo.
+// Banner principal de la tienda. Textos vía i18n; stats derivados del catálogo.
 import { computed } from 'vue'
 import { t } from '../i18n.js'
 import { products } from '../data/products.js'
 
 const productCount = products.length
 const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
+
+// Producto destacado del banner (nicho, buena foto).
+const featured = products.find((p) => p.id === 'althair') || products[0]
 </script>
 
 <template>
@@ -19,7 +22,7 @@ const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
         <p class="hero-text">{{ t('hero.text') }}</p>
         <div class="hero-cta">
           <a href="#coleccion" class="btn btn-primary">{{ t('hero.ctaCollection') }}</a>
-          <a href="#esencia" class="btn btn-ghost">{{ t('hero.ctaEssence') }}</a>
+          <a href="#best" class="btn btn-ghost">{{ t('hero.ctaEssence') }}</a>
         </div>
 
         <div class="hero-stats">
@@ -39,10 +42,12 @@ const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
       </div>
 
       <div class="hero-visual" aria-hidden="true">
-        <div class="hero-card">
-          <img src="/logo-mark.svg" alt="" class="hero-logo" />
-          <span class="hero-card-word gold-text">AUREXIR</span>
-          <span class="hero-card-sub">Parfum Homme</span>
+        <div class="hero-stage">
+          <img :src="featured.image" :alt="featured.name" class="hero-bottle" />
+        </div>
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          {{ t('hero.badge') }}
         </div>
         <div class="hero-blob hero-blob--gold"></div>
         <div class="hero-blob hero-blob--cyan"></div>
@@ -55,16 +60,16 @@ const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
 .hero {
   position: relative;
   overflow: hidden;
-  padding: 84px 0 96px;
+  padding: 76px 0 88px;
   background:
     radial-gradient(
       circle at 82% 0%,
-      color-mix(in srgb, var(--bronce) 16%, transparent),
+      color-mix(in srgb, var(--bronce) 18%, transparent),
       transparent 46%
     ),
     radial-gradient(
       circle at 0% 100%,
-      color-mix(in srgb, var(--cian) 7%, transparent),
+      color-mix(in srgb, var(--cian) 8%, transparent),
       transparent 38%
     ),
     var(--bg);
@@ -88,7 +93,7 @@ const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
 }
 
 .hero-text {
-  font-size: 1.12rem;
+  font-size: 1.1rem;
   color: var(--text-secondary);
   max-width: 500px;
   margin-bottom: 32px;
@@ -98,7 +103,7 @@ const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
-  margin-bottom: 48px;
+  margin-bottom: 44px;
 }
 
 .hero-stats {
@@ -119,83 +124,102 @@ const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
   color: var(--text-muted);
 }
 
-/* Visual */
+/* Visual con botella destacada */
 .hero-visual {
   position: relative;
-  min-height: 440px;
-}
-
-.hero-card {
-  position: absolute;
-  inset: 0;
+  min-height: 460px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  background-color: var(--bg-elevated);
+}
+
+.hero-stage {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  aspect-ratio: 4 / 5;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  background-color: #090a0e;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.hero-bottle {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-badge {
+  position: absolute;
+  z-index: 2;
+  bottom: 26px;
+  left: -14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
   box-shadow: var(--shadow);
 }
 
-.hero-logo {
-  width: 58%;
-  max-width: 250px;
-}
-
-.hero-card-word {
-  font-family: var(--font-display);
-  font-size: 1.7rem;
-  font-weight: 500;
-  letter-spacing: 0.34em;
-  margin-right: -0.34em;
-}
-
-.hero-card-sub {
-  font-size: 0.72rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-right: -0.3em;
+.hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--cian);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--cian) 30%, transparent);
 }
 
 .hero-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(12px);
-  z-index: -1;
+  filter: blur(14px);
+  z-index: 0;
 }
 
 .hero-blob--gold {
-  inset: 20px -40px auto auto;
+  inset: 10px -30px auto auto;
   width: 240px;
   height: 240px;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--bronce) 32%, transparent),
+    color-mix(in srgb, var(--bronce) 34%, transparent),
     transparent 70%
   );
 }
 
 .hero-blob--cyan {
-  inset: auto auto -30px -30px;
+  inset: auto auto -20px -20px;
   width: 190px;
   height: 190px;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--cian) 22%, transparent),
+    color-mix(in srgb, var(--cian) 24%, transparent),
     transparent 70%
   );
 }
 
 @media (max-width: 880px) {
+  .hero {
+    padding: 48px 0 56px;
+  }
   .hero-inner {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 36px;
   }
   .hero-visual {
-    display: none;
+    min-height: 0;
+    order: -1;
+  }
+  .hero-stage {
+    width: min(100%, 320px);
   }
 }
 </style>
