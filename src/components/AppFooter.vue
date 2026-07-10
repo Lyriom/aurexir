@@ -146,6 +146,7 @@ function onSubscribe() {
 
 .newsletter-input {
   flex: 1;
+  min-width: 0;
   height: 48px;
   padding: 0 18px;
   border-radius: 999px;
@@ -269,6 +270,17 @@ function onSubscribe() {
   }
   .footer-bottom-inner {
     justify-content: flex-start;
+  }
+  /* Newsletter apilado: input y botón a ancho completo en móvil angosto. */
+  .newsletter-form {
+    flex-wrap: wrap;
+    max-width: none;
+  }
+  .newsletter-input {
+    flex-basis: 100%;
+  }
+  .newsletter-form .btn {
+    width: 100%;
   }
 }
 </style>
