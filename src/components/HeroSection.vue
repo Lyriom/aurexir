@@ -208,18 +208,23 @@ const featured = products.find((p) => p.id === 'althair') || products[0]
 
 @media (max-width: 880px) {
   .hero {
-    padding: 48px 0 56px;
+    padding: 40px 0 56px;
   }
   .hero-inner {
     grid-template-columns: 1fr;
-    gap: 36px;
+    gap: 32px;
   }
+  /* El titular y el CTA van primero; la foto queda debajo. */
   .hero-visual {
     min-height: 0;
-    order: -1;
+    order: 0;
   }
   .hero-stage {
-    width: min(100%, 320px);
+    width: min(100%, 360px);
+  }
+  .hero-badge {
+    left: 6px;
+    bottom: 16px;
   }
 }
 </style>
