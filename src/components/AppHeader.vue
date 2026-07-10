@@ -329,8 +329,13 @@ function clearSearch() {
   .header-inner > .search {
     display: none;
   }
+  /* Inset lateral vía margin (no padding) para que la lupa —posicionada
+     respecto al formulario— alinee dentro del pill del input. */
   .search--mobile {
     display: flex;
+    width: auto;
+    padding: 0;
+    margin: 0 24px 12px;
   }
   .search--mobile .search-input {
     max-width: none;
@@ -340,6 +345,10 @@ function clearSearch() {
 @media (max-width: 640px) {
   .header-inner {
     gap: 12px;
+  }
+  .search--mobile {
+    margin-left: 18px;
+    margin-right: 18px;
   }
   /* El isotipo basta como marca; libera espacio para carrito + menú. */
   .brand-word {
