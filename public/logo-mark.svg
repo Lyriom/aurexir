@@ -8,7 +8,7 @@
   </defs>
 
   <!-- Gema hexagonal -->
-  <polygon points="340,48 402,84 402,156 340,192 278,156 278,84" fill="#15161b" stroke="url(#goldGrad)" stroke-width="1.5"/>
+  <polygon points="340,48 402,84 402,156 340,192 278,156 278,84" fill="none" stroke="url(#goldGrad)" stroke-width="1.5"/>
 
   <!-- Facetas internas -->
   <line x1="340" y1="66" x2="340" y2="174" stroke="url(#goldGrad)" stroke-width="0.5" opacity="0.35"/>
