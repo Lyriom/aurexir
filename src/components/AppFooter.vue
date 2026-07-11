@@ -100,6 +100,12 @@ function onSubscribe() {
         <span class="footer-soft">{{ t('footer.soft') }}</span>
       </div>
     </div>
+
+    <div class="footer-credit">
+      <div class="container">
+        <span>Powered by GOZSYL LLC</span>
+      </div>
+    </div>
   </footer>
 </template>
 
@@ -252,6 +258,14 @@ function onSubscribe() {
 
 .footer-soft {
   color: var(--accent);
+}
+
+.footer-credit {
+  border-top: 1px solid var(--border);
+  padding: 14px 24px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
 @media (max-width: 860px) {
