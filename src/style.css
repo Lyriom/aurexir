@@ -9,6 +9,14 @@
    Sitio en modo oscuro único: la marca vive sobre ónix.
    ============================================================ */
 
+@font-face {
+  font-family: "AurexirSans";
+  src: url("/fonts/AurexirSans-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Marca */
   --onix: #0d0e12;
@@ -34,8 +42,8 @@
   --gold-grad: linear-gradient(120deg, #e8c78a 0%, #b8863b 55%, #7a5a25 100%);
 
   /* Tipografía */
-  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
-  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --font-display: "AurexirSans", "Inter", system-ui, sans-serif;
+  --font-sans: "AurexirSans", "Inter", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
 
   /* Métricas */
   --maxw: 1200px;
