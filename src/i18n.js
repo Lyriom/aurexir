@@ -46,7 +46,7 @@ export function setLocale(next) {
 const messages = {
   en: {
     announce: {
-      shipping: 'Free delivery in Quito on orders over $120',
+      shipping: 'Free delivery in USA on orders over $120',
       auth: '100% authentic fragrances',
       order: 'Order by WhatsApp or Instagram',
     },
@@ -194,7 +194,7 @@ const messages = {
   },
   es: {
     announce: {
-      shipping: 'Envío gratis en Quito en pedidos desde $120',
+      shipping: 'Envío gratis en USA en pedidos desde $120',
       auth: 'Fragancias 100% originales',
       order: 'Pide por WhatsApp o Instagram',
     },
