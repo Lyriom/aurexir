@@ -2,7 +2,7 @@
  * Configuración de la tienda.
  *
  * 👉 WHATSAPP_NUMBER: número al que se envían los pedidos, en formato
- *    internacional SIN "+", espacios ni guiones. Ejemplo Ecuador: 593991234567
+ *    internacional SIN "+", espacios ni guiones. Ejemplo EE. UU.: 12125551234
  *    Mientras esté vacío, el botón abre WhatsApp sin destinatario fijo.
  * 👉 INSTAGRAM_DM_URL: enlace directo para escribir por DM en Instagram.
  */
@@ -10,6 +10,16 @@ import { locale } from './i18n.js'
 
 export const WHATSAPP_NUMBER = ''
 export const INSTAGRAM_DM_URL = 'https://ig.me/m/lyriom__'
+
+/*
+ * Backend (FastAPI). La URL se define en .env → VITE_API_URL=http://localhost:8000
+ * Mientras esté vacía, el front funciona en modo "solo catálogo"
+ * (pedidos por Instagram/WhatsApp, sin login ni checkout con tarjeta).
+ */
+export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
+// Umbral de envío gratis en USD (mercado EE. UU.). Mantener en sync con el back.
+export const FREE_SHIPPING_THRESHOLD = 200
 
 // Construye el enlace de WhatsApp con un mensaje pre-rellenado, según el idioma.
 export function whatsappLink(product) {

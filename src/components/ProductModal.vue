@@ -2,7 +2,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { instagramLink, openInstagramOrder, whatsappLink } from '../config.js'
 import { locale, t } from '../i18n.js'
-import { addToCart } from '../store.js'
+import { addToCart, formatPrice } from '../store.js'
 
 const props = defineProps({
   product: {
@@ -44,13 +44,6 @@ function onAdd() {
   added.value = true
   if (addedTimer) clearTimeout(addedTimer)
   addedTimer = setTimeout(() => (added.value = false), 1400)
-}
-
-function formatPrice(value) {
-  return new Intl.NumberFormat('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(value)
 }
 
 function close() {

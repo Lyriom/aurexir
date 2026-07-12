@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { locale, t } from '../i18n.js'
-import { addToCart } from '../store.js'
+import { addToCart, formatPrice } from '../store.js'
 
 const props = defineProps({
   product: {
@@ -11,13 +11,6 @@ const props = defineProps({
 })
 
 defineEmits(['select'])
-
-function formatPrice(value) {
-  return new Intl.NumberFormat('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(value)
-}
 
 // % de descuento cuando hay precio anterior.
 const discount = computed(() => {

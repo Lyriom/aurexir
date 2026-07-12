@@ -1,6 +1,6 @@
 <script setup>
 // Panel lateral del carrito. Estado y acciones vienen de store.js.
-import { watch, onMounted, onUnmounted } from 'vue'
+import { computed, watch, onMounted, onUnmounted } from 'vue'
 import { t } from '../i18n.js'
 import {
   cart,
@@ -13,6 +13,9 @@ import {
   decQty,
   removeFromCart,
   checkoutWhatsAppLink,
+  formatPrice,
+  freeShippingRemaining,
+  freeShippingProgress,
 } from '../store.js'
 
 // Deep-link: abrir el carrito al cargar con #cart (p. ej. enlaces externos).
@@ -22,12 +25,12 @@ onMounted(() => {
   }
 })
 
-function formatPrice(value) {
-  return new Intl.NumberFormat('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(value)
-}
+// Mensaje de la barra de envío gratis (con el monto restante interpolado).
+const freeShipLabel = computed(() =>
+  freeShippingRemaining.value === 0
+    ? t('cart.freeShipDone')
+    : t('cart.freeShipAway').replace('{amount}', formatPrice(freeShippingRemaining.value))
+)
 
 function onKey(e) {
   if (e.key === 'Escape') closeCart()
@@ -116,10 +119,24 @@ onUnmounted(() => {
           </ul>
 
           <footer class="cart-foot">
+            <!-- Progreso hacia envío gratis (umbral compartido con el back) -->
+            <div class="cart-freeship" :class="{ done: freeShippingRemaining === 0 }">
+              <p class="cart-freeship-text">{{ freeShipLabel }}</p>
+              <div class="cart-freeship-track" aria-hidden="true">
+                <div class="cart-freeship-fill" :style="{ width: freeShippingProgress + '%' }"></div>
+              </div>
+            </div>
+
             <button type="button" class="cart-clear" @click="clearCart">{{ t('cart.clear') }}</button>
             <div class="cart-subtotal">
               <span>{{ t('cart.subtotal') }}</span>
               <strong>{{ formatPrice(cartTotal) }}</strong>
+            </div>
+            <div class="cart-shipline">
+              <span>{{ t('cart.shipping') }}</span>
+              <span :class="{ 'is-free': freeShippingRemaining === 0 }">
+                {{ freeShippingRemaining === 0 ? t('cart.shippingFree') : t('cart.shippingCalc') }}
+              </span>
             </div>
             <p class="cart-note">{{ t('cart.note') }}</p>
             <a
@@ -255,17 +272,14 @@ onUnmounted(() => {
   height: 64px;
   border-radius: var(--radius);
   overflow: hidden;
-  background: radial-gradient(circle at 50% 25%, #ffffff, #e7e9ed 85%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
+  border: 1px solid var(--border);
+  background-color: #090a0e;
 }
 
 .cart-thumb img {
-  width: auto;
+  width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .cart-info {
@@ -358,6 +372,54 @@ onUnmounted(() => {
   padding: 18px 22px 22px;
   border-top: 1px solid var(--border);
   background-color: var(--bg-soft);
+}
+
+/* Barra de envío gratis */
+.cart-freeship {
+  margin-bottom: 14px;
+}
+
+.cart-freeship-text {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.cart-freeship.done .cart-freeship-text {
+  color: var(--cian);
+}
+
+.cart-freeship-track {
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--gunmetal);
+  overflow: hidden;
+}
+
+.cart-freeship-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gold-grad);
+  transition: width 0.35s ease;
+}
+
+.cart-freeship.done .cart-freeship-fill {
+  background: var(--cian);
+}
+
+.cart-shipline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: -4px 0 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cart-shipline .is-free {
+  color: var(--cian);
+  font-weight: 700;
 }
 
 .cart-clear {

@@ -1,9 +1,9 @@
 /*
- * Estado global de la tienda AUREXIR (sin backend, solo front).
+ * Estado global de la tienda AUREXIR.
  *
- * - cart:   carrito reactivo persistido en localStorage. Pensado para
- *           conectarse a un backend/pasarela más adelante: la forma de cada
- *           línea ({ id, name, brand, price, image, qty }) ya sirve de payload.
+ * - cart:   carrito reactivo persistido en localStorage. La forma de cada
+ *           línea ({ id, name, brand, price, image, qty }) es el payload que
+ *           consume el backend (ver api.js → cartToPayload).
  * - search / activeCategory: filtros compartidos entre el header (buscador y
  *           nav de categorías) y el catálogo.
  * - checkoutWhatsAppLink(): arma un pedido con TODO el carrito para WhatsApp.
@@ -13,7 +13,7 @@
  */
 import { reactive, ref, computed } from 'vue'
 import { locale } from './i18n.js'
-import { WHATSAPP_NUMBER } from './config.js'
+import { FREE_SHIPPING_THRESHOLD, WHATSAPP_NUMBER } from './config.js'
 
 const STORAGE_KEY = 'aurexir-cart'
 
@@ -50,6 +50,16 @@ export const cartCount = computed(() =>
 // Importe total del carrito.
 export const cartTotal = computed(() =>
   cart.items.reduce((sum, i) => sum + i.qty * i.price, 0)
+)
+
+/* ---- Envío gratis (mercado EE. UU.) ---- */
+// Cuánto falta para el envío gratis y % de progreso hacia el umbral.
+export const freeShippingRemaining = computed(() =>
+  Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal.value)
+)
+
+export const freeShippingProgress = computed(() =>
+  Math.min(100, Math.round((cartTotal.value / FREE_SHIPPING_THRESHOLD) * 100))
 )
 
 export function addToCart(product, qty = 1) {
@@ -109,8 +119,9 @@ export function closeCart() {
   cart.open = false
 }
 
-function formatMoney(value) {
-  return new Intl.NumberFormat('es-EC', {
+// Formato de precio único de la tienda (mercado EE. UU. → en-US: $85.00).
+export function formatPrice(value) {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
   }).format(value)
@@ -125,11 +136,11 @@ export function checkoutWhatsAppLink() {
   const lines = cart.items
     .map(
       (i) =>
-        `• ${i.qty}× ${i.brand} — ${i.name} (${formatMoney(i.price * i.qty)})`
+        `• ${i.qty}× ${i.brand} — ${i.name} (${formatPrice(i.price * i.qty)})`
     )
     .join('\n')
   const totalLabel = en ? 'Total' : 'Total'
-  const foot = `${totalLabel}: ${formatMoney(cartTotal.value)}`
+  const foot = `${totalLabel}: ${formatPrice(cartTotal.value)}`
   const msg = `${head}\n${lines}\n\n${foot}`
   const base = WHATSAPP_NUMBER
     ? `https://wa.me/${WHATSAPP_NUMBER}`
