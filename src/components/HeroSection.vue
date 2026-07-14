@@ -2,13 +2,15 @@
 // Banner principal de la tienda. Textos vía i18n; stats derivados del catálogo.
 import { computed } from 'vue'
 import { t } from '../i18n.js'
-import { products } from '../data/products.js'
+import { products } from '../catalog.js'
 
-const productCount = products.length
-const brandCount = computed(() => new Set(products.map((p) => p.brand)).size)
+const productCount = computed(() => products.value.length)
+const brandCount = computed(() => new Set(products.value.map((p) => p.brand)).size)
 
 // Producto destacado del banner (nicho, buena foto).
-const featured = products.find((p) => p.id === 'althair') || products[0]
+const featured = computed(
+  () => products.value.find((p) => p.id === 'althair') || products.value[0]
+)
 </script>
 
 <template>

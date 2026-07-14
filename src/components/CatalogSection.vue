@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import ProductCard from './ProductCard.vue'
 import ProductRow from './ProductRow.vue'
 import ProductModal from './ProductModal.vue'
-import { products } from '../data/products.js'
+import { products } from '../catalog.js'
 import { t } from '../i18n.js'
 import { search, activeCategory } from '../store.js'
 
@@ -11,20 +11,21 @@ import { search, activeCategory } from '../store.js'
  * Núcleo del catálogo. Tres filas destacadas (Novedades / Best sellers /
  * Ofertas) + rejilla completa filtrable por categoría y buscador (estado
  * compartido en store.js). El modal de detalle se gestiona aquí.
+ * `products` viene de catalog.js: API real con fallback al catálogo local.
  */
-const newArrivals = computed(() => products.filter((p) => p.isNew))
-const bestSellers = computed(() => products.filter((p) => p.isBest))
-const onSale = computed(() => products.filter((p) => p.oldPrice))
+const newArrivals = computed(() => products.value.filter((p) => p.isNew))
+const bestSellers = computed(() => products.value.filter((p) => p.isBest))
+const onSale = computed(() => products.value.filter((p) => p.oldPrice))
 
 const categories = computed(() => [
   'all',
-  ...Array.from(new Set(products.map((p) => p.category))),
+  ...Array.from(new Set(products.value.map((p) => p.category))),
 ])
 
 // Rejilla completa filtrada por categoría + texto de búsqueda.
 const filteredProducts = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return products.filter((p) => {
+  return products.value.filter((p) => {
     const inCat = activeCategory.value === 'all' || p.category === activeCategory.value
     if (!inCat) return false
     if (!q) return true

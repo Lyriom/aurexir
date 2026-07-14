@@ -1,18 +1,36 @@
 <script setup>
 // Footer de tienda: newsletter + columnas + barra inferior. Textos vía i18n.
 import { ref } from 'vue'
-import { t } from '../i18n.js'
+import { t, locale } from '../i18n.js'
 import { INSTAGRAM_DM_URL } from '../config.js'
+import { api, apiErrorMessage, ApiError } from '../api.js'
 
 const year = new Date().getFullYear()
 const email = ref('')
 const subscribed = ref(false)
+const sending = ref(false)
+const error = ref('')
 
-function onSubscribe() {
-  if (!email.value) return
-  // Sin backend: solo feedback visual. Aquí se conectará el alta real luego.
-  subscribed.value = true
-  email.value = ''
+// Alta real en el backend (POST /newsletter, idempotente: repetir no falla).
+// Si la API está deshabilitada (modo solo catálogo) se mantiene el feedback visual.
+async function onSubscribe() {
+  if (!email.value || sending.value) return
+  error.value = ''
+  sending.value = true
+  try {
+    await api.subscribeNewsletter(email.value.trim(), locale.value)
+    subscribed.value = true
+    email.value = ''
+  } catch (e) {
+    if (e instanceof ApiError && e.message === 'API_DISABLED') {
+      subscribed.value = true
+      email.value = ''
+    } else {
+      error.value = apiErrorMessage(e)
+    }
+  } finally {
+    sending.value = false
+  }
 }
 </script>
 
@@ -34,9 +52,12 @@ function onSubscribe() {
             :placeholder="t('newsletter.placeholder')"
             :aria-label="t('newsletter.placeholder')"
           />
-          <button type="submit" class="btn btn-primary">{{ t('newsletter.button') }}</button>
+          <button type="submit" class="btn btn-primary" :disabled="sending">
+            {{ t('newsletter.button') }}
+          </button>
         </form>
-        <p v-if="subscribed" class="newsletter-done">{{ t('newsletter.done') }}</p>
+        <p v-if="subscribed && !error" class="newsletter-done">{{ t('newsletter.done') }}</p>
+        <p v-if="error" class="newsletter-error">{{ error }}</p>
       </div>
     </div>
 
@@ -51,17 +72,17 @@ function onSubscribe() {
 
       <div class="footer-col">
         <h4>{{ t('footer.shopTitle') }}</h4>
-        <a href="#coleccion">{{ t('footer.shopCollection') }}</a>
-        <a href="#novedades">{{ t('footer.shopNew') }}</a>
-        <a href="#best">{{ t('footer.shopBest') }}</a>
-        <a href="#ofertas">{{ t('footer.shopSale') }}</a>
+        <router-link :to="{ path: '/', hash: '#coleccion' }">{{ t('footer.shopCollection') }}</router-link>
+        <router-link :to="{ path: '/', hash: '#novedades' }">{{ t('footer.shopNew') }}</router-link>
+        <router-link :to="{ path: '/', hash: '#best' }">{{ t('footer.shopBest') }}</router-link>
+        <router-link :to="{ path: '/', hash: '#ofertas' }">{{ t('footer.shopSale') }}</router-link>
       </div>
 
       <div class="footer-col">
         <h4>{{ t('footer.helpTitle') }}</h4>
-        <a href="#tienda">{{ t('footer.helpShipping') }}</a>
-        <a href="#tienda">{{ t('footer.helpAuth') }}</a>
-        <a href="#tienda">{{ t('footer.helpOrder') }}</a>
+        <router-link :to="{ path: '/', hash: '#tienda' }">{{ t('footer.helpShipping') }}</router-link>
+        <router-link :to="{ path: '/', hash: '#tienda' }">{{ t('footer.helpAuth') }}</router-link>
+        <router-link :to="{ path: '/', hash: '#tienda' }">{{ t('footer.helpOrder') }}</router-link>
       </div>
 
       <div class="footer-col">
@@ -178,6 +199,14 @@ function onSubscribe() {
   flex-basis: 100%;
   margin: 0;
   color: var(--cian);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.newsletter-error {
+  flex-basis: 100%;
+  margin: 0;
+  color: #e07070;
   font-size: 0.9rem;
   font-weight: 600;
 }

@@ -204,3 +204,205 @@ h3 {
     padding: 0 18px;
   }
 }
+
+/* ============================================================
+   Panel de administración (tablas, badges y modales compartidos
+   por AdminMetrics / AdminOrders / AdminProducts)
+   ============================================================ */
+.admin-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-elevated);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.admin-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+  background-color: var(--bg-soft);
+}
+
+/* Badge de estado de pedido / producto */
+.admin-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.admin-badge--pending { color: var(--bronce-light); border-color: var(--bronce); }
+.admin-badge--paid { color: var(--cian); border-color: var(--cian); }
+.admin-badge--shipped { color: var(--titanio); border-color: var(--titanio); }
+.admin-badge--delivered { color: #7fd88f; border-color: #3f7a4b; }
+.admin-badge--canceled { color: #e07070; border-color: #7a3f3f; }
+.admin-badge--inactive { color: #e07070; border-color: #7a3f3f; }
+.admin-badge--active { color: #7fd88f; border-color: #3f7a4b; }
+
+/* Botón pequeño de acción en tablas */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--transition), border-color var(--transition),
+    background-color var(--transition);
+}
+
+.admin-btn:hover:not(:disabled) {
+  color: var(--hover);
+  border-color: var(--hover);
+}
+
+.admin-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-btn--primary {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.admin-btn--primary:hover:not(:disabled) {
+  color: var(--accent-contrast);
+  border-color: var(--bronce-light);
+  background-color: var(--bronce-light);
+}
+
+/* Select / input compactos del panel */
+.admin-input,
+.admin-select {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.admin-input:focus,
+.admin-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+textarea.admin-input {
+  height: auto;
+  min-height: 70px;
+  padding: 10px 14px;
+  resize: vertical;
+}
+
+/* Modal simple del panel */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.admin-modal {
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.admin-modal h3 {
+  margin: 0 0 20px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.admin-field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.admin-field > span {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+.admin-field .admin-input,
+.admin-field .admin-select {
+  width: 100%;
+}
+
+.admin-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.admin-error {
+  margin: 10px 0;
+  font-size: 0.86rem;
+  color: #e07070;
+}
+
+.admin-note {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

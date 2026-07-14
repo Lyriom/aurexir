@@ -1,8 +1,14 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import LangSwitch from './LangSwitch.vue'
 import { t } from '../i18n.js'
 import { search, activeCategory, scrollToCatalog, openCart, cartCount } from '../store.js'
+import { auth, isAdmin } from '../auth.js'
+import { API_BASE } from '../config.js'
+
+const route = useRoute()
+const router = useRouter()
 
 const scrolled = ref(false)
 const menuOpen = ref(false)
@@ -14,19 +20,21 @@ function onScroll() {
 onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
-// Navegación tipo tienda: cada enlace lleva a una sección.
+// Navegación tipo tienda: cada enlace lleva a una sección de la landing.
+// Se navega con router-link a '/#ancla' para que funcione desde /account, etc.
 const links = [
-  { key: 'nav.home', href: '#inicio' },
-  { key: 'nav.newArrivals', href: '#novedades' },
-  { key: 'nav.bestSellers', href: '#best' },
-  { key: 'nav.sale', href: '#ofertas' },
-  { key: 'nav.catalog', href: '#coleccion' },
-  { key: 'nav.brands', href: '#casas' },
+  { key: 'nav.home', hash: '#inicio' },
+  { key: 'nav.newArrivals', hash: '#novedades' },
+  { key: 'nav.bestSellers', hash: '#best' },
+  { key: 'nav.sale', hash: '#ofertas' },
+  { key: 'nav.catalog', hash: '#coleccion' },
+  { key: 'nav.brands', hash: '#casas' },
 ]
 
 function onSearchSubmit() {
   menuOpen.value = false
-  scrollToCatalog()
+  if (route.path === '/') scrollToCatalog()
+  else router.push({ path: '/', hash: '#coleccion' })
 }
 
 // "Todas las fragancias": limpia el filtro de categoría antes de desplazar.
@@ -38,15 +46,28 @@ function onCatalogLink() {
 function clearSearch() {
   search.value = ''
 }
+
+// Cuenta: con sesión → /account; sin sesión → /login. Solo si hay backend.
+const showAccount = Boolean(API_BASE)
+
+function onAccount() {
+  menuOpen.value = false
+  router.push(auth.user ? '/account' : { path: '/login', query: { next: '/account' } })
+}
 </script>
 
 <template>
   <header class="header" :class="{ 'is-scrolled': scrolled }">
     <div class="container header-inner">
-      <a href="#inicio" class="brand" :aria-label="t('header.home')" @click="menuOpen = false">
+      <router-link
+        :to="{ path: '/', hash: '#inicio' }"
+        class="brand"
+        :aria-label="t('header.home')"
+        @click="menuOpen = false"
+      >
         <img src="/logo-mark.svg" alt="" class="brand-logo" />
         <span class="brand-word gold-text">AUREXIR</span>
-      </a>
+      </router-link>
 
       <form class="search" role="search" @submit.prevent="onSearchSubmit">
         <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -75,6 +96,34 @@ function clearSearch() {
 
       <div class="header-actions">
         <LangSwitch />
+
+        <router-link
+          v-if="showAccount && isAdmin"
+          to="/admin"
+          class="icon-btn"
+          :aria-label="t('header.admin')"
+          :title="t('header.admin')"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3l7 4v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V7z" />
+            <path d="M9.5 12l1.8 1.8L15 10" />
+          </svg>
+        </router-link>
+
+        <button
+          v-if="showAccount"
+          class="icon-btn"
+          type="button"
+          :aria-label="t('header.account')"
+          :title="auth.user ? auth.user.name : t('header.account')"
+          @click="onAccount"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20.5c1.6-3.4 4.5-5 8-5s6.4 1.6 8 5" />
+          </svg>
+          <span v-if="auth.user" class="account-dot" aria-hidden="true"></span>
+        </button>
 
         <button
           class="icon-btn cart-btn"
@@ -125,15 +174,15 @@ function clearSearch() {
     <!-- Navegación de categorías -->
     <nav class="catnav" :class="{ open: menuOpen }" :aria-label="t('nav.catalog')">
       <div class="container catnav-inner">
-        <a
+        <router-link
           v-for="link in links"
-          :key="link.href"
-          :href="link.href"
+          :key="link.hash"
+          :to="{ path: '/', hash: link.hash }"
           class="catnav-link"
-          @click="link.href === '#coleccion' ? onCatalogLink() : (menuOpen = false)"
+          @click="link.hash === '#coleccion' ? onCatalogLink() : (menuOpen = false)"
         >
           {{ t(link.key) }}
-        </a>
+        </router-link>
       </div>
     </nav>
   </header>
@@ -269,6 +318,18 @@ function clearSearch() {
   color: var(--hover);
   border-color: var(--hover);
   transform: translateY(-1px);
+}
+
+/* Punto cian: hay sesión iniciada. */
+.account-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--cian);
+  border: 2px solid var(--bg-elevated);
 }
 
 .cart-count {

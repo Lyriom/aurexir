@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { locale, t } from '../i18n.js'
 import { addToCart, formatPrice } from '../store.js'
+import { isOutOfStock } from '../catalog.js'
 
 const props = defineProps({
   product: {
@@ -18,9 +19,13 @@ const discount = computed(() => {
   return Math.round((1 - props.product.price / props.product.oldPrice) * 100)
 })
 
-// Insignia principal mostrada sobre la foto (prioridad: oferta > nicho > nuevo > best).
+// Sin stock según el backend (con catálogo local nunca aplica).
+const soldOut = computed(() => isOutOfStock(props.product))
+
+// Insignia principal (prioridad: agotado > oferta > nicho > nuevo > best).
 const badge = computed(() => {
   const p = props.product
+  if (soldOut.value) return { key: 'soldout', text: t('tags.soldOut'), variant: 'soldout' }
   if (p.oldPrice) return { key: 'sale', text: `-${discount.value}%`, variant: 'sale' }
   if (p.tag === 'niche') return { key: 'niche', text: t('tags.niche'), variant: 'niche' }
   if (p.isNew) return { key: 'new', text: t('tags.new'), variant: 'new' }
@@ -32,6 +37,7 @@ const added = ref(false)
 let addedTimer = null
 
 function onAdd() {
+  if (soldOut.value) return
   addToCart(props.product)
   added.value = true
   if (addedTimer) clearTimeout(addedTimer)
@@ -85,6 +91,7 @@ function onAdd() {
           type="button"
           class="add-btn"
           :class="{ 'is-added': added }"
+          :disabled="soldOut"
           @click="onAdd"
         >
           <svg v-if="!added" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -96,7 +103,7 @@ function onAdd() {
           <svg v-else viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 12.5l5 5L20 6.5" />
           </svg>
-          <span>{{ added ? t('product.added') : t('product.addToCart') }}</span>
+          <span>{{ soldOut ? t('tags.soldOut') : added ? t('product.added') : t('product.addToCart') }}</span>
         </button>
       </div>
     </div>
@@ -189,6 +196,11 @@ function onAdd() {
   background-color: #171921;
   border: 1px solid var(--bronce);
   color: var(--bronce-light);
+}
+.card-badge--soldout {
+  background-color: #171921;
+  border: 1px solid var(--gunmetal);
+  color: var(--text-muted);
 }
 
 .card-view {
@@ -331,6 +343,14 @@ function onAdd() {
   background-color: var(--cian);
   border-color: var(--cian);
   color: #06232a;
+}
+
+.add-btn:disabled {
+  border-color: var(--gunmetal);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  background-color: transparent;
+  transform: none;
 }
 
 @media (max-width: 400px) {

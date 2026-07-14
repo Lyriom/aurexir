@@ -3,11 +3,11 @@
 // el catálogo por esa casa vía el buscador compartido.
 import { computed } from 'vue'
 import { t } from '../i18n.js'
-import { products } from '../data/products.js'
+import { products } from '../catalog.js'
 import { search, activeCategory, scrollToCatalog } from '../store.js'
 
 const brands = computed(() =>
-  Array.from(new Set(products.map((p) => p.brand))).sort((a, b) =>
+  Array.from(new Set(products.value.map((p) => p.brand))).sort((a, b) =>
     a.localeCompare(b)
   )
 )

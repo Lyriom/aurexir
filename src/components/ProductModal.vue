@@ -3,6 +3,7 @@ import { ref, computed, watch, onUnmounted } from 'vue'
 import { instagramLink, openInstagramOrder, whatsappLink } from '../config.js'
 import { locale, t } from '../i18n.js'
 import { addToCart, formatPrice } from '../store.js'
+import { isOutOfStock } from '../catalog.js'
 
 const props = defineProps({
   product: {
@@ -35,11 +36,14 @@ const discount = computed(() => {
   return Math.round((1 - props.product.price / props.product.oldPrice) * 100)
 })
 
+// Sin stock según el backend (con catálogo local nunca aplica).
+const soldOut = computed(() => isOutOfStock(props.product))
+
 const added = ref(false)
 let addedTimer = null
 
 function onAdd() {
-  if (!props.product) return
+  if (!props.product || soldOut.value) return
   addToCart(props.product)
   added.value = true
   if (addedTimer) clearTimeout(addedTimer)
@@ -124,12 +128,14 @@ onUnmounted(() => {
               <span class="modal-reviews">{{ product.rating }} · {{ product.reviews }} {{ t('product.reviews') }}</span>
             </div>
 
-            <p class="modal-desc">{{ product.desc[locale] }}</p>
+            <p class="modal-desc">{{ product.desc?.[locale] }}</p>
 
-            <ul class="modal-notes">
+            <!-- Pirámide olfativa: solo si el producto trae notas (los creados
+                 desde el panel admin pueden no tenerlas). -->
+            <ul v-if="product.notes?.top?.[locale]" class="modal-notes">
               <li><span>{{ t('product.top') }}</span><strong>{{ product.notes.top[locale] }}</strong></li>
-              <li><span>{{ t('product.heart') }}</span><strong>{{ product.notes.heart[locale] }}</strong></li>
-              <li><span>{{ t('product.base') }}</span><strong>{{ product.notes.base[locale] }}</strong></li>
+              <li><span>{{ t('product.heart') }}</span><strong>{{ product.notes.heart?.[locale] }}</strong></li>
+              <li><span>{{ t('product.base') }}</span><strong>{{ product.notes.base?.[locale] }}</strong></li>
             </ul>
 
             <div class="modal-price-row">
@@ -142,6 +148,7 @@ onUnmounted(() => {
               type="button"
               class="modal-add"
               :class="{ 'is-added': added }"
+              :disabled="soldOut"
               @click="onAdd"
             >
               <svg v-if="!added" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -153,7 +160,7 @@ onUnmounted(() => {
               <svg v-else viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M4 12.5l5 5L20 6.5" />
               </svg>
-              {{ added ? t('product.added') : t('product.addToCart') }}
+              {{ soldOut ? t('tags.soldOut') : added ? t('product.added') : t('product.addToCart') }}
             </button>
 
             <p class="modal-note">{{ t('product.orderNote') }}</p>
@@ -493,6 +500,13 @@ onUnmounted(() => {
 .modal-add.is-added {
   background-color: var(--cian);
   color: #06232a;
+}
+
+.modal-add:disabled {
+  background-color: var(--gunmetal);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
 }
 
 .modal-note {
