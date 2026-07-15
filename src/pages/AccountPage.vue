@@ -44,6 +44,13 @@ function formatDate(iso) {
     return iso
   }
 }
+
+// Etiqueta del método de envío. 'express' solo aparece en pedidos antiguos;
+// se conserva como texto legible. Cualquier valor desconocido cae al literal.
+function shippingLabel(m) {
+  const keys = { standard: 'methodStandard', eco: 'methodEco', express: 'methodExpress' }
+  return keys[m] ? t(`account.${keys[m]}`) : m
+}
 </script>
 
 <template>
@@ -98,9 +105,7 @@ function formatDate(iso) {
           </ul>
 
           <footer class="order-foot">
-            <span class="order-method">
-              {{ order.shipping_method === 'express' ? t('account.methodExpress') : t('account.methodStandard') }}
-            </span>
+            <span class="order-method">{{ shippingLabel(order.shipping_method) }}</span>
             <dl class="order-totals">
               <div>
                 <dt>{{ t('account.subtotal') }}</dt>

@@ -69,6 +69,12 @@ function formatDate(iso) {
     return iso
   }
 }
+
+// 'express' solo en pedidos antiguos; se conserva legible. Desconocido → literal.
+function shippingLabel(m) {
+  const keys = { standard: 'methodStandard', eco: 'methodEco', express: 'methodExpress' }
+  return keys[m] ? t(`admin.${keys[m]}`) : m
+}
 </script>
 
 <template>
@@ -97,7 +103,10 @@ function formatDate(iso) {
         </thead>
         <tbody>
           <tr v-for="order in orders" :key="order.id">
-            <td><strong>{{ order.number }}</strong></td>
+            <td>
+              <strong>{{ order.number }}</strong>
+              <span class="order-ship">{{ shippingLabel(order.shipping_method) }}</span>
+            </td>
             <td>{{ formatDate(order.created_at) }}</td>
             <td>
               <span class="order-user">{{ order.user?.name }}</span>
@@ -156,6 +165,14 @@ function formatDate(iso) {
 .order-email {
   display: block;
   font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Método de envío bajo el número de pedido */
+.order-ship {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.74rem;
   color: var(--text-muted);
 }
 

@@ -149,10 +149,11 @@ export const api = {
   listProducts: () => request('/products'),
   getProduct: (id) => request(`/products/${id}`),
 
-  /* ---- Envío (zip = ZIP de EE. UU. de 5 dígitos) ---- */
+  /* ---- Envío (tarifa plana por método; ya no se envía ZIP) ---- */
+  // method: 'standard' ($20) | 'eco' ($30). Envío gratis desde el umbral.
   // → { subtotal, shipping, free_shipping_threshold, method, total_estimate }
-  quoteShipping: ({ items, zip, method = 'standard' }) =>
-    request('/shipping/quote', { method: 'POST', body: { items, zip, method } }),
+  quoteShipping: ({ items, method = 'standard' }) =>
+    request('/shipping/quote', { method: 'POST', body: { items, method } }),
 
   /* ---- Descuentos ---- */
   // → { valid, code, percent } (siempre 200; valid=false si no existe o ya se usó)

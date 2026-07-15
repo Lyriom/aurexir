@@ -46,24 +46,28 @@ watch(
   }
 )
 
-/* ---- Cotización de envío (POST /shipping/quote) ---- */
-const zip = ref('')
+/* ---- Cotización de envío (POST /shipping/quote) ----
+ * Tarifa plana por método ('standard' $20 · 'eco' $30); ya no hay ZIP, así que
+ * la cotización se pide sola al abrir el carrito y al cambiar método o
+ * cantidades. Un pequeño debounce evita repetir la llamada al pulsar +/−. */
+// Tarifas planas que se muestran en cada opción (el importe cobrado lo confirma
+// el back en el quote; sobre el umbral de envío gratis la línea marca GRATIS).
+const SHIPPING_RATES = { standard: 20, eco: 30 }
 const method = ref('standard')
 const quote = ref(null)
 const quoteLoading = ref(false)
 const quoteError = ref('')
 
 async function requestQuote() {
-  quoteError.value = ''
-  if (!/^\d{5}$/.test(zip.value.trim())) {
-    quoteError.value = t('cart.zipInvalid')
+  if (!apiEnabled || !cart.items.length) {
+    quote.value = null
     return
   }
+  quoteError.value = ''
   quoteLoading.value = true
   try {
     quote.value = await api.quoteShipping({
       items: cartToPayload(cart.items),
-      zip: zip.value.trim(),
       method: method.value,
     })
   } catch (e) {
@@ -74,13 +78,21 @@ async function requestQuote() {
   }
 }
 
-// Si cambia el carrito o el método, la cotización anterior deja de valer.
-watch(cartTotal, () => {
-  quote.value = null
-})
-watch(method, () => {
-  if (quote.value) requestQuote()
-})
+let quoteTimer = null
+function scheduleQuote() {
+  if (quoteTimer) clearTimeout(quoteTimer)
+  quoteTimer = setTimeout(requestQuote, 250)
+}
+
+// Cotiza al abrir el carrito y cuando cambian el método o las cantidades.
+watch(
+  [() => cart.open, method, cartTotal],
+  () => {
+    if (cart.open && apiEnabled && cart.items.length) scheduleQuote()
+    else quote.value = null
+  },
+  { immediate: true }
+)
 
 /* ---- Código de descuento (POST /discounts/validate) ---- */
 const codeInput = ref('')
@@ -307,43 +319,41 @@ onUnmounted(() => {
               <p v-if="codeError" class="cart-error">{{ codeError }}</p>
             </template>
 
-            <!-- Cotización de envío real (backend) -->
-            <form v-if="apiEnabled" class="cart-est" @submit.prevent="requestQuote">
-              <p class="cart-est-title">{{ t('cart.estimateTitle') }}</p>
-              <div class="cart-est-methods" role="radiogroup" :aria-label="t('cart.shipping')">
+            <!-- Método de envío (tarifa plana; se cotiza solo, sin ZIP) -->
+            <div v-if="apiEnabled" class="cart-ship">
+              <p class="cart-ship-title">{{ t('cart.shippingMethod') }}</p>
+              <div class="cart-ship-methods" role="radiogroup" :aria-label="t('cart.shippingMethod')">
                 <button
                   type="button"
-                  class="cart-est-method"
+                  class="cart-ship-opt"
                   :class="{ active: method === 'standard' }"
+                  role="radio"
+                  :aria-checked="method === 'standard'"
                   @click="method = 'standard'"
                 >
-                  {{ t('cart.methodStandard') }}
+                  <span class="cart-ship-opt-top">
+                    <span class="cart-ship-opt-name">{{ t('cart.methodStandard') }}</span>
+                    <span class="cart-ship-opt-price">{{ formatPrice(SHIPPING_RATES.standard) }}</span>
+                  </span>
+                  <span class="cart-ship-opt-sub">{{ t('cart.standardSub') }}</span>
                 </button>
                 <button
                   type="button"
-                  class="cart-est-method"
-                  :class="{ active: method === 'express' }"
-                  @click="method = 'express'"
+                  class="cart-ship-opt cart-ship-opt--eco"
+                  :class="{ active: method === 'eco' }"
+                  role="radio"
+                  :aria-checked="method === 'eco'"
+                  @click="method = 'eco'"
                 >
-                  {{ t('cart.methodExpress') }}
-                </button>
-              </div>
-              <div class="cart-est-row">
-                <input
-                  v-model="zip"
-                  class="cart-est-zip"
-                  type="text"
-                  inputmode="numeric"
-                  maxlength="5"
-                  :placeholder="t('cart.zipPlaceholder')"
-                  :aria-label="t('cart.zipPlaceholder')"
-                />
-                <button type="submit" class="cart-est-btn" :disabled="quoteLoading">
-                  {{ quoteLoading ? '…' : t('cart.estimate') }}
+                  <span class="cart-ship-opt-top">
+                    <span class="cart-ship-opt-name">🌿 {{ t('cart.methodEco') }}</span>
+                    <span class="cart-ship-opt-price">{{ formatPrice(SHIPPING_RATES.eco) }}</span>
+                  </span>
+                  <span class="cart-ship-opt-sub">{{ t('cart.ecoSub') }}</span>
                 </button>
               </div>
               <p v-if="quoteError" class="cart-error">{{ quoteError }}</p>
-            </form>
+            </div>
 
             <div class="cart-shipline">
               <span>{{ t('cart.shipping') }}</span>
@@ -351,7 +361,7 @@ onUnmounted(() => {
                 {{ Number(quote.shipping) === 0 ? t('cart.shippingFree') : formatPrice(quote.shipping) }}
               </span>
               <span v-else :class="{ 'is-free': freeShippingRemaining === 0 }">
-                {{ freeShippingRemaining === 0 ? t('cart.shippingFree') : t('cart.shippingCalc') }}
+                {{ quoteLoading ? '…' : freeShippingRemaining === 0 ? t('cart.shippingFree') : t('cart.shippingCalc') }}
               </span>
             </div>
             <div v-if="quote" class="cart-shipline cart-est-total">
@@ -736,92 +746,79 @@ onUnmounted(() => {
 }
 
 /* Estimador de envío (ZIP + método) */
-.cart-est {
+.cart-ship {
   margin: 0 0 14px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background-color: var(--bg-elevated);
 }
 
-.cart-est-title {
+.cart-ship-title {
   margin: 0 0 10px;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.cart-est-methods {
+.cart-ship-methods {
   display: flex;
   gap: 8px;
-  margin-bottom: 10px;
 }
 
-.cart-est-method {
+.cart-ship-opt {
   flex: 1;
-  padding: 7px 10px;
-  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 13px;
+  text-align: left;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background-color: var(--bg);
   color: var(--text-secondary);
   font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
   cursor: pointer;
   transition: color var(--transition), border-color var(--transition),
     background-color var(--transition);
 }
 
-.cart-est-method.active {
-  background-color: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+.cart-ship-opt:hover {
+  border-color: var(--text-muted);
 }
 
-.cart-est-row {
+.cart-ship-opt.active {
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+}
+
+.cart-ship-opt--eco.active {
+  border-color: #4caf6e;
+  background-color: color-mix(in srgb, #4caf6e 14%, transparent);
+}
+
+.cart-ship-opt-top {
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 8px;
 }
 
-.cart-est-zip {
-  flex: 1;
-  min-width: 0;
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 0.9rem;
-}
-
-.cart-est-zip:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.cart-est-btn {
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  font-family: inherit;
-  font-size: 0.85rem;
+.cart-ship-opt-name {
+  font-size: 0.86rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
 }
 
-.cart-est-btn:hover:not(:disabled) {
-  background-color: var(--accent);
-  color: var(--accent-contrast);
+.cart-ship-opt-price {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
-.cart-est-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
+.cart-ship-opt-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.cart-ship-opt--eco.active .cart-ship-opt-sub {
+  color: #7fca9a;
 }
 
 .cart-est-total {
