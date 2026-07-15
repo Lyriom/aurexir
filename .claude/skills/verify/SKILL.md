@@ -53,3 +53,4 @@ transición → usar `page.evaluate(() => document.querySelector(sel).click())`.
 5. Guards: /admin como customer redirige fuera; token corrupto en localStorage → /account manda a /login.
 6. Admin: dashboard con métricas; pedidos pending→paid (botones solo de transiciones válidas); productos: ajustar stock ({delta, reason}).
 7. Probes: login con contraseña mala (error legible), 429 (mensaje "demasiados intentos"), API caída (fallback a products.js local + newsletter con error legible).
+8. Descuento de bienvenida: popup a los ~8s (solo invitados; frecuencia en localStorage `aurexir_promo_seen`/`aurexir_promo_done`), newsletter devuelve {status, discount_email_sent}; código en el carrito (POST /discounts/validate → línea −15% del subtotal, envío intacto), 409 en checkout/session desaplica el código, pedidos con discount_code/discount_amount.

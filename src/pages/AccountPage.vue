@@ -110,6 +110,13 @@ function formatDate(iso) {
                 <dt>{{ t('account.shipping') }}</dt>
                 <dd>{{ formatPrice(order.shipping_cost) }}</dd>
               </div>
+              <div v-if="Number(order.discount_amount)" class="order-discount">
+                <dt>
+                  {{ t('account.discount') }}
+                  <template v-if="order.discount_code">({{ order.discount_code }})</template>
+                </dt>
+                <dd>−{{ formatPrice(order.discount_amount) }}</dd>
+              </div>
               <div v-if="Number(order.tax)">
                 <dt>{{ t('account.tax') }}</dt>
                 <dd>{{ formatPrice(order.tax) }}</dd>
@@ -331,5 +338,10 @@ function formatDate(iso) {
   font-size: 0.98rem !important;
   padding-top: 4px;
   border-top: 1px solid var(--border);
+}
+
+.order-discount {
+  color: var(--cian) !important;
+  font-weight: 600;
 }
 </style>

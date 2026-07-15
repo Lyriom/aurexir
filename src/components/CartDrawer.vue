@@ -19,6 +19,10 @@ import {
   formatPrice,
   freeShippingRemaining,
   freeShippingProgress,
+  discount,
+  discountAmount,
+  applyDiscount,
+  removeDiscount,
 } from '../store.js'
 import { api, cartToPayload, apiErrorMessage, ApiError } from '../api.js'
 import { API_BASE } from '../config.js'
@@ -78,6 +82,46 @@ watch(method, () => {
   if (quote.value) requestQuote()
 })
 
+/* ---- Código de descuento (POST /discounts/validate) ---- */
+const codeInput = ref('')
+const codeApplying = ref(false)
+const codeError = ref('')
+
+async function applyCode() {
+  const code = codeInput.value.trim()
+  if (!code || codeApplying.value) return
+  codeError.value = ''
+  codeApplying.value = true
+  try {
+    // Siempre responde 200: {valid, code, percent}
+    const res = await api.validateDiscount(code)
+    if (res && res.valid) {
+      applyDiscount(res.code || code, Number(res.percent))
+      codeInput.value = ''
+    } else {
+      codeError.value = t('cart.codeInvalid')
+    }
+  } catch (e) {
+    codeError.value = apiErrorMessage(e)
+  } finally {
+    codeApplying.value = false
+  }
+}
+
+function unapplyCode() {
+  removeDiscount()
+  codeError.value = ''
+}
+
+// Total estimado: subtotal − descuento + envío cotizado (el envío no se
+// descuenta; el back aplica la misma regla al crear la sesión de Stripe).
+const estimatedTotal = computed(() => {
+  if (!quote.value) return null
+  return (
+    Math.round((Number(quote.value.total_estimate) - discountAmount.value) * 100) / 100
+  )
+})
+
 /* ---- Pago con tarjeta (Stripe Checkout hospedado) ---- */
 const checkoutLoading = ref(false)
 const checkoutError = ref('')
@@ -95,6 +139,7 @@ async function payWithCard() {
     const { checkout_url } = await api.createCheckoutSession({
       items: cartToPayload(cart.items),
       shipping_method: method.value,
+      discount_code: discount.value?.code || null,
     })
     window.location.href = checkout_url
   } catch (e) {
@@ -103,6 +148,16 @@ async function payWithCard() {
       closeCart()
       router.push({ path: '/login', query: { next: '/#cart' } })
       return
+    }
+    // 409 por código inválido/ya usado → mostrar el detalle y desaplicarlo.
+    if (
+      e instanceof ApiError &&
+      e.status === 409 &&
+      discount.value &&
+      typeof e.detail === 'string' &&
+      /c[oó]digo|descuento|discount/i.test(e.detail)
+    ) {
+      removeDiscount()
     }
     checkoutError.value = apiErrorMessage(e)
   }
@@ -218,6 +273,40 @@ onUnmounted(() => {
               <strong>{{ formatPrice(cartTotal) }}</strong>
             </div>
 
+            <!-- Código de descuento (15% bienvenida, un solo uso) -->
+            <template v-if="apiEnabled">
+              <div v-if="discount" class="cart-shipline cart-discount">
+                <span>
+                  {{ t('cart.discountLabel') }} ({{ discount.code }})
+                  <button
+                    type="button"
+                    class="cart-discount-remove"
+                    :aria-label="t('cart.codeRemove')"
+                    :title="t('cart.codeRemove')"
+                    @click="unapplyCode"
+                  >
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                  </button>
+                </span>
+                <span class="cart-discount-amount">−{{ formatPrice(discountAmount) }}</span>
+              </div>
+              <form v-else class="cart-code" @submit.prevent="applyCode">
+                <input
+                  v-model="codeInput"
+                  class="cart-code-input"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  :placeholder="t('cart.codePlaceholder')"
+                  :aria-label="t('cart.codeTitle')"
+                />
+                <button type="submit" class="cart-code-btn" :disabled="codeApplying || !codeInput.trim()">
+                  {{ codeApplying ? '…' : t('cart.codeApply') }}
+                </button>
+              </form>
+              <p v-if="codeError" class="cart-error">{{ codeError }}</p>
+            </template>
+
             <!-- Cotización de envío real (backend) -->
             <form v-if="apiEnabled" class="cart-est" @submit.prevent="requestQuote">
               <p class="cart-est-title">{{ t('cart.estimateTitle') }}</p>
@@ -267,7 +356,7 @@ onUnmounted(() => {
             </div>
             <div v-if="quote" class="cart-shipline cart-est-total">
               <span>{{ t('cart.estTotal') }}</span>
-              <span>{{ formatPrice(quote.total_estimate) }}</span>
+              <span>{{ formatPrice(estimatedTotal) }}</span>
             </div>
 
             <p class="cart-note">{{ apiEnabled ? t('cart.payNote') : t('cart.note') }}</p>
@@ -556,6 +645,94 @@ onUnmounted(() => {
 
 .cart-freeship.done .cart-freeship-fill {
   background: var(--cian);
+}
+
+/* Código de descuento */
+.cart-code {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.cart-code-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px dashed var(--border);
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cart-code-input::placeholder {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
+}
+
+.cart-code-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.cart-code-btn {
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition), opacity var(--transition);
+}
+
+.cart-code-btn:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.cart-code-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cart-discount {
+  color: var(--cian);
+  font-weight: 600;
+}
+
+.cart-discount-amount {
+  color: var(--cian);
+  font-weight: 700;
+}
+
+.cart-discount-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  vertical-align: -4px;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--gunmetal);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition), background-color var(--transition);
+}
+
+.cart-discount-remove:hover {
+  color: #fff;
+  background-color: #7a3f3f;
 }
 
 /* Estimador de envío (ZIP + método) */

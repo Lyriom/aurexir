@@ -1,29 +1,34 @@
 <script setup>
 // Footer de tienda: newsletter + columnas + barra inferior. Textos vía i18n.
-import { ref } from 'vue'
-import { t, locale } from '../i18n.js'
+import { ref, computed } from 'vue'
+import { t } from '../i18n.js'
 import { INSTAGRAM_DM_URL } from '../config.js'
-import { api, apiErrorMessage, ApiError } from '../api.js'
+import { apiErrorMessage, ApiError } from '../api.js'
+import { subscribeWithDiscount } from '../newsletter.js'
 
 const year = new Date().getFullYear()
 const email = ref('')
-const subscribed = ref(false)
+const resultKey = ref('') // 'sent' | 'resent' | 'pending' | 'done' (sin backend)
 const sending = ref(false)
 const error = ref('')
 
-// Alta real en el backend (POST /newsletter, idempotente: repetir no falla).
-// Si la API está deshabilitada (modo solo catálogo) se mantiene el feedback visual.
+// Mismo flujo y mensajes que el popup de bienvenida (newsletter.js):
+// el alta envía por email un código de descuento del 15% de un solo uso.
+const doneMessage = computed(() =>
+  resultKey.value ? t(`newsletter.${resultKey.value}`) : ''
+)
+
 async function onSubscribe() {
   if (!email.value || sending.value) return
   error.value = ''
   sending.value = true
   try {
-    await api.subscribeNewsletter(email.value.trim(), locale.value)
-    subscribed.value = true
+    resultKey.value = await subscribeWithDiscount(email.value)
     email.value = ''
   } catch (e) {
     if (e instanceof ApiError && e.message === 'API_DISABLED') {
-      subscribed.value = true
+      // Modo solo catálogo: feedback visual sin promesa de código.
+      resultKey.value = 'done'
       email.value = ''
     } else {
       error.value = apiErrorMessage(e)
@@ -56,7 +61,7 @@ async function onSubscribe() {
             {{ t('newsletter.button') }}
           </button>
         </form>
-        <p v-if="subscribed && !error" class="newsletter-done">{{ t('newsletter.done') }}</p>
+        <p v-if="doneMessage && !error" class="newsletter-done">{{ doneMessage }}</p>
         <p v-if="error" class="newsletter-error">{{ error }}</p>
       </div>
     </div>

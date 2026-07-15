@@ -52,8 +52,59 @@ export const cartTotal = computed(() =>
   cart.items.reduce((sum, i) => sum + i.qty * i.price, 0)
 )
 
+/* ---- Código de descuento (bienvenida 15%, un solo uso) ---- */
+// { code, percent } validado contra POST /discounts/validate, o null.
+// Se persiste para que sobreviva recargas; el back lo re-valida al pagar.
+const DISCOUNT_KEY = 'aurexir-discount'
+
+function loadDiscount() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(DISCOUNT_KEY)
+    const parsed = raw ? JSON.parse(raw) : null
+    return parsed && parsed.code && parsed.percent ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+export const discount = ref(loadDiscount())
+
+function persistDiscount() {
+  if (typeof window === 'undefined') return
+  try {
+    if (discount.value) {
+      window.localStorage.setItem(DISCOUNT_KEY, JSON.stringify(discount.value))
+    } else {
+      window.localStorage.removeItem(DISCOUNT_KEY)
+    }
+  } catch {
+    /* almacenamiento no disponible */
+  }
+}
+
+export function applyDiscount(code, percent) {
+  discount.value = { code, percent }
+  persistDiscount()
+}
+
+export function removeDiscount() {
+  discount.value = null
+  persistDiscount()
+}
+
+// percent% del subtotal, redondeado a centavos. El envío no se descuenta.
+export const discountAmount = computed(() =>
+  discount.value ? Math.round(cartTotal.value * discount.value.percent) / 100 : 0
+)
+
+export const cartTotalAfterDiscount = computed(
+  () => Math.round((cartTotal.value - discountAmount.value) * 100) / 100
+)
+
 /* ---- Envío gratis (mercado EE. UU.) ---- */
 // Cuánto falta para el envío gratis y % de progreso hacia el umbral.
+// Nota: el umbral se evalúa sobre el subtotal SIN descuento (regla del back).
 export const freeShippingRemaining = computed(() =>
   Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal.value)
 )
@@ -109,6 +160,8 @@ export function decQty(id) {
 export function clearCart() {
   cart.items.splice(0, cart.items.length)
   persist()
+  // El código aplicado viaja con esa compra (un solo uso): no lo arrastramos.
+  removeDiscount()
 }
 
 export function openCart() {

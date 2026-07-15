@@ -103,7 +103,13 @@ function formatDate(iso) {
               <span class="order-user">{{ order.user?.name }}</span>
               <span class="order-email">{{ order.user?.email }}</span>
             </td>
-            <td>{{ formatPrice(order.total) }}</td>
+            <td>
+              {{ formatPrice(order.total) }}
+              <span v-if="Number(order.discount_amount)" class="order-discount">
+                −{{ formatPrice(order.discount_amount) }}
+                <template v-if="order.discount_code">({{ order.discount_code }})</template>
+              </span>
+            </td>
             <td>
               <span class="admin-badge" :class="`admin-badge--${order.status}`">
                 {{ t(`status.${order.status}`) }}
@@ -151,6 +157,14 @@ function formatDate(iso) {
   display: block;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+/* Línea de descuento aplicado al pedido (código de bienvenida) */
+.order-discount {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--cian);
+  white-space: nowrap;
 }
 
 .order-actions {

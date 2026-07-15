@@ -154,15 +154,22 @@ export const api = {
   quoteShipping: ({ items, zip, method = 'standard' }) =>
     request('/shipping/quote', { method: 'POST', body: { items, zip, method } }),
 
+  /* ---- Descuentos ---- */
+  // → { valid, code, percent } (siempre 200; valid=false si no existe o ya se usó)
+  validateDiscount: (code) =>
+    request('/discounts/validate', { method: 'POST', body: { code } }),
+
   /* ---- Checkout con Stripe (requiere sesión) ---- */
   // → { checkout_url }  (redirigir el navegador a esa URL)
-  createCheckoutSession: ({ items, shipping_method = 'standard' }) =>
+  // discount_code opcional; el back responde 409 si es inválido o ya usado.
+  createCheckoutSession: ({ items, shipping_method = 'standard', discount_code = null }) =>
     request('/checkout/session', {
       method: 'POST',
       auth: true,
       body: {
         items,
         shipping_method,
+        ...(discount_code ? { discount_code } : {}),
         success_url: `${window.location.origin}/checkout/success`,
         cancel_url: `${window.location.origin}/checkout/cancel`,
       },
