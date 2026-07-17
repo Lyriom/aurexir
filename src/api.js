@@ -163,13 +163,15 @@ export const api = {
   /* ---- Checkout con Stripe (requiere sesión) ---- */
   // → { checkout_url }  (redirigir el navegador a esa URL)
   // discount_code opcional; el back responde 409 si es inválido o ya usado.
-  createCheckoutSession: ({ items, shipping_method = 'standard', discount_code = null }) =>
+  // locale: idioma para los correos (confirmación y tracking) que envía el back.
+  createCheckoutSession: ({ items, shipping_method = 'standard', discount_code = null, locale = 'en' }) =>
     request('/checkout/session', {
       method: 'POST',
       auth: true,
       body: {
         items,
         shipping_method,
+        locale,
         ...(discount_code ? { discount_code } : {}),
         success_url: `${window.location.origin}/checkout/success`,
         cancel_url: `${window.location.origin}/checkout/cancel`,
@@ -192,6 +194,19 @@ export const api = {
       }),
     updateOrderStatus: (orderId, status) =>
       request(`/admin/orders/${orderId}`, { method: 'PATCH', auth: true, body: { status } }),
+    // Alta/edición del seguimiento. El back pasa el pedido a "shipped" y avisa
+    // al cliente por correo; no hace falta un updateOrderStatus adicional.
+    // 200 → pedido con tracking · 409 → no pagado · 422 → URL inválida.
+    setTracking: (orderId, { tracking_number, tracking_carrier, tracking_url }) =>
+      request(`/admin/orders/${orderId}/tracking`, {
+        method: 'PATCH',
+        auth: true,
+        body: {
+          tracking_number,
+          ...(tracking_carrier ? { tracking_carrier } : {}),
+          ...(tracking_url ? { tracking_url } : {}),
+        },
+      }),
     products: () => request('/admin/products', { auth: true }),
     createProduct: (data) =>
       request('/admin/products', { method: 'POST', auth: true, body: data }),

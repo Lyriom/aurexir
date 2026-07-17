@@ -21,11 +21,13 @@ const statusFilter = ref('')
 const orders = ref([])
 const loading = ref(true)
 const error = ref('')
+const okMessage = ref('')
 const updatingId = ref(null)
 
 async function load() {
   loading.value = true
   error.value = ''
+  okMessage.value = ''
   try {
     orders.value = await api.admin.orders(statusFilter.value)
   } catch (e) {
@@ -75,6 +77,67 @@ function shippingLabel(m) {
   const keys = { standard: 'methodStandard', eco: 'methodEco', express: 'methodExpress' }
   return keys[m] ? t(`admin.${keys[m]}`) : m
 }
+
+/* ---- Seguimiento del envío (PATCH /admin/orders/{id}/tracking) ----
+ * Disponible en pedidos 'paid' (envía y avisa al cliente) y 'shipped' (corregir).
+ * El back pone status 'shipped' y manda el correo; no llamamos a updateOrderStatus. */
+const trackingOrder = ref(null) // pedido en edición, o null
+const trackNumber = ref('')
+const trackCarrier = ref('')
+const trackUrl = ref('')
+const trackingError = ref('')
+const trackingSaving = ref(false)
+
+function canTrack(order) {
+  return order.status === 'paid' || order.status === 'shipped'
+}
+
+function openTracking(order) {
+  trackingOrder.value = order
+  trackNumber.value = order.tracking_number || ''
+  trackCarrier.value = order.tracking_carrier || ''
+  trackUrl.value = order.tracking_url || ''
+  trackingError.value = ''
+  okMessage.value = ''
+}
+
+async function saveTracking() {
+  const number = trackNumber.value.trim()
+  if (!number || trackingSaving.value) return
+  const url = trackUrl.value.trim()
+  // Validación local: si hay URL, debe empezar por http/https (el back da 422 igual).
+  if (url && !/^https?:\/\//i.test(url)) {
+    trackingError.value = t('admin.trackingUrlInvalid')
+    return
+  }
+  trackingError.value = ''
+  trackingSaving.value = true
+  const id = trackingOrder.value.id
+  try {
+    const updated = await api.admin.setTracking(id, {
+      tracking_number: number,
+      tracking_carrier: trackCarrier.value.trim() || undefined,
+      tracking_url: url || undefined,
+    })
+    const patch = updated || {
+      status: 'shipped',
+      tracking_number: number,
+      tracking_carrier: trackCarrier.value.trim() || null,
+      tracking_url: url || null,
+    }
+    const idx = orders.value.findIndex((o) => o.id === id)
+    if (idx !== -1) orders.value[idx] = { ...orders.value[idx], ...patch }
+    okMessage.value = t('admin.trackingSaved')
+    trackingOrder.value = null
+    // Si el filtro activo ya no incluye al pedido (p. ej. 'paid' → 'shipped'), recargar.
+    if (statusFilter.value && statusFilter.value !== (patch.status || 'shipped')) load()
+  } catch (e) {
+    // 409 → no pagado · 422 → URL inválida · otros → mensaje legible.
+    trackingError.value = apiErrorMessage(e)
+  } finally {
+    trackingSaving.value = false
+  }
+}
 </script>
 
 <template>
@@ -87,6 +150,7 @@ function shippingLabel(m) {
     </div>
 
     <p v-if="error" class="admin-error">{{ error }}</p>
+    <p v-if="okMessage" class="admin-ok">{{ okMessage }}</p>
     <p v-if="loading" class="admin-note">{{ t('admin.loading') }}</p>
 
     <div v-else class="admin-table-wrap">
@@ -127,17 +191,27 @@ function shippingLabel(m) {
             <td>
               <div class="order-actions">
                 <button
+                  v-if="canTrack(order)"
+                  type="button"
+                  class="admin-btn admin-btn--primary"
+                  @click="openTracking(order)"
+                >
+                  {{ order.tracking_number ? t('admin.editTracking') : t('admin.addTracking') }}
+                </button>
+                <button
                   v-for="next in TRANSITIONS[order.status] || []"
                   :key="next"
                   type="button"
                   class="admin-btn"
-                  :class="{ 'admin-btn--primary': next !== 'canceled' }"
                   :disabled="updatingId === order.id"
                   @click="setStatus(order, next)"
                 >
                   {{ t('admin.markAs') }} {{ t(`status.${next}`).toLowerCase() }}
                 </button>
-                <span v-if="!(TRANSITIONS[order.status] || []).length" class="admin-note">—</span>
+                <span
+                  v-if="!canTrack(order) && !(TRANSITIONS[order.status] || []).length"
+                  class="admin-note"
+                >—</span>
               </div>
             </td>
           </tr>
@@ -146,6 +220,45 @@ function shippingLabel(m) {
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Modal de seguimiento (alta / edición) -->
+    <div v-if="trackingOrder" class="admin-modal-overlay" @click.self="trackingOrder = null">
+      <form class="admin-modal" @submit.prevent="saveTracking">
+        <h3>{{ t('admin.trackingTitle') }} — {{ trackingOrder.number }}</h3>
+
+        <label class="admin-field">
+          <span>{{ t('admin.trackingNumber') }}</span>
+          <input v-model="trackNumber" class="admin-input" type="text" required autocomplete="off" />
+        </label>
+
+        <label class="admin-field">
+          <span>{{ t('admin.trackingCarrier') }}</span>
+          <input
+            v-model="trackCarrier"
+            class="admin-input"
+            type="text"
+            autocomplete="off"
+            :placeholder="t('admin.carrierPlaceholder')"
+          />
+        </label>
+
+        <label class="admin-field">
+          <span>{{ t('admin.trackingUrl') }}</span>
+          <input v-model="trackUrl" class="admin-input" type="url" inputmode="url" placeholder="https://…" />
+        </label>
+
+        <p v-if="trackingError" class="admin-error">{{ trackingError }}</p>
+
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-btn" @click="trackingOrder = null">
+            {{ t('admin.cancel') }}
+          </button>
+          <button type="submit" class="admin-btn admin-btn--primary" :disabled="trackingSaving || !trackNumber.trim()">
+            {{ trackingSaving ? t('admin.loading') : t('admin.save') }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>

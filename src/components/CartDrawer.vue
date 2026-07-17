@@ -1,10 +1,10 @@
 <script setup>
 // Panel lateral del carrito. Estado y acciones vienen de store.js.
-// Con backend activo añade: cotización de envío (ZIP de EE. UU.) y pago con
-// tarjeta vía Stripe Checkout (requiere sesión). WhatsApp sigue disponible.
+// Con backend activo añade: cotización de envío (tarifa plana por método) y
+// pago con tarjeta vía Stripe Checkout (requiere sesión). WhatsApp sigue vivo.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { t } from '../i18n.js'
+import { t, locale } from '../i18n.js'
 import {
   cart,
   cartTotal,
@@ -152,6 +152,7 @@ async function payWithCard() {
       items: cartToPayload(cart.items),
       shipping_method: method.value,
       discount_code: discount.value?.code || null,
+      locale: locale.value,
     })
     window.location.href = checkout_url
   } catch (e) {

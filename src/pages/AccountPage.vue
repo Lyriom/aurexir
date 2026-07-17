@@ -104,6 +104,33 @@ function shippingLabel(m) {
             </li>
           </ul>
 
+          <!-- Envío en camino: pedidos enviados con nº de seguimiento -->
+          <div v-if="order.status === 'shipped' && order.tracking_number" class="order-tracking">
+            <div class="order-tracking-info">
+              <p class="order-tracking-title">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z" />
+                  <circle cx="7" cy="18" r="1.6" />
+                  <circle cx="17.5" cy="18" r="1.6" />
+                </svg>
+                {{ t('account.trackingTitle') }}
+              </p>
+              <p class="order-tracking-num">
+                <span v-if="order.tracking_carrier" class="order-tracking-carrier">{{ order.tracking_carrier }}</span>
+                {{ t('account.trackingNumber') }}: <strong>{{ order.tracking_number }}</strong>
+              </p>
+            </div>
+            <a
+              v-if="order.tracking_url"
+              :href="order.tracking_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-primary order-tracking-btn"
+            >
+              {{ t('account.trackShipment') }}
+            </a>
+          </div>
+
           <footer class="order-foot">
             <span class="order-method">{{ shippingLabel(order.shipping_method) }}</span>
             <dl class="order-totals">
@@ -300,6 +327,49 @@ function shippingLabel(m) {
 .order-item-price {
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+/* Envío en camino */
+.order-tracking {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--cian) 8%, transparent);
+  flex-wrap: wrap;
+}
+
+.order-tracking-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cian);
+}
+
+.order-tracking-num {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+}
+
+.order-tracking-carrier {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.order-tracking-btn {
+  flex: 0 0 auto;
 }
 
 .order-foot {

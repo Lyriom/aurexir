@@ -195,6 +195,10 @@ const messages = {
       methodStandard: 'Standard shipping',
       methodEco: 'Eco shipping 🌿',
       methodExpress: 'Express shipping',
+      trackingTitle: 'Shipment on its way',
+      trackingNumber: 'Tracking number',
+      trackingCarrier: 'Carrier',
+      trackShipment: 'Track my shipment',
     },
     status: {
       pending: 'Pending payment',
@@ -207,6 +211,7 @@ const messages = {
       successTitle: 'Payment received ✦',
       successText:
         'Thank you! Your order is confirmed. We’ll email you the details — you can also track it in “My orders”.',
+      emailNote: 'We’ve emailed you a confirmation. Your order arrives in 3–5 business days.',
       viewOrders: 'View my orders',
       keepShopping: 'Keep shopping',
       cancelTitle: 'Checkout canceled',
@@ -243,6 +248,17 @@ const messages = {
       methodStandard: 'Standard',
       methodEco: 'Eco 🌿',
       methodExpress: 'Express',
+      // Tracking
+      addTracking: 'Add tracking',
+      editTracking: 'Edit tracking',
+      trackingTitle: 'Shipment tracking',
+      trackingNumber: 'Tracking number',
+      trackingCarrier: 'Carrier (optional)',
+      trackingUrl: 'Tracking URL (optional)',
+      carrierPlaceholder: 'UPS, USPS, FedEx, DHL…',
+      trackingSaved: 'Tracking saved — the customer was notified.',
+      trackingUrlInvalid: 'The tracking URL must start with http or https.',
+      viewTracking: 'View tracking',
       // Products
       newProduct: 'New product',
       editProduct: 'Edit product',
@@ -491,6 +507,10 @@ const messages = {
       methodStandard: 'Envío estándar',
       methodEco: 'Envío ecológico 🌿',
       methodExpress: 'Envío exprés',
+      trackingTitle: 'Envío en camino',
+      trackingNumber: 'Nº de seguimiento',
+      trackingCarrier: 'Transportista',
+      trackShipment: 'Seguir mi envío',
     },
     status: {
       pending: 'Pago pendiente',
@@ -503,6 +523,7 @@ const messages = {
       successTitle: 'Pago recibido ✦',
       successText:
         '¡Gracias! Tu pedido está confirmado. Te enviaremos los detalles por correo; también puedes seguirlo en “Mis pedidos”.',
+      emailNote: 'Te enviamos un correo de confirmación. Tu pedido llegará en 3–5 días laborables.',
       viewOrders: 'Ver mis pedidos',
       keepShopping: 'Seguir comprando',
       cancelTitle: 'Pago cancelado',
@@ -539,6 +560,17 @@ const messages = {
       methodStandard: 'Estándar',
       methodEco: 'Eco 🌿',
       methodExpress: 'Exprés',
+      // Tracking
+      addTracking: 'Añadir seguimiento',
+      editTracking: 'Editar seguimiento',
+      trackingTitle: 'Seguimiento del envío',
+      trackingNumber: 'Nº de seguimiento',
+      trackingCarrier: 'Transportista (opcional)',
+      trackingUrl: 'URL de seguimiento (opcional)',
+      carrierPlaceholder: 'UPS, USPS, FedEx, DHL…',
+      trackingSaved: 'Seguimiento guardado, se avisó al cliente.',
+      trackingUrlInvalid: 'La URL de seguimiento debe empezar por http o https.',
+      viewTracking: 'Ver seguimiento',
       // Products
       newProduct: 'Nuevo producto',
       editProduct: 'Editar producto',
