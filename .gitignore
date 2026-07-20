@@ -3,5 +3,11 @@ dist
 .DS_Store
 *.local
 
+# Playwright (artefactos de la suite E2E de qa/)
+test-results
+qa/e2e/report
+playwright-report
+.cache
+
 # Hoja de catálogo interna (incluye costos): no publicar
 *.numbers

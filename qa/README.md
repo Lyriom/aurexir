@@ -10,6 +10,20 @@ Cada carpeta contiene:
 - **`casos-de-prueba.md`** — casos de uso y pruebas paso a paso, con resultado
   esperado, prioridad y estado.
 
+## Suite automatizada (Playwright)
+
+Los casos ✅ están automatizados en [`qa/e2e/`](e2e/) (Playwright). Cada test
+lleva el **ID del caso** en el título, así la ejecución se mapea con estos
+documentos. Backend simulado por interceptación de red → la suite es
+autocontenida (no necesita la API real).
+
+```bash
+npm run test:e2e          # 45 casos, ~1 min (headless, Chrome del sistema)
+npm run test:e2e -- -g CP-0.5.0-08   # un caso por ID
+```
+
+Última ejecución local: **45/45 en verde**. Ver [`qa/e2e/README.md`](e2e/README.md).
+
 Convenciones de IDs:
 - `CA-<ver>-NN` → Criterio de Aceptación (p. ej. `CA-0.2.0-03`).
 - `CP-<ver>-NN` → Caso de Prueba (p. ej. `CP-0.3.0-05`).
