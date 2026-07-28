@@ -156,19 +156,27 @@ const featured = computed(
 .hero-badge {
   position: absolute;
   z-index: 2;
-  bottom: 26px;
-  left: -14px;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: calc(100% - 28px);
   padding: 10px 16px;
   border-radius: 999px;
-  background-color: var(--bg-elevated);
+  background-color: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+  backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   color: var(--text);
   font-size: 0.82rem;
   font-weight: 600;
+  white-space: nowrap;
   box-shadow: var(--shadow);
+}
+
+.hero-badge-dot {
+  flex: 0 0 auto;
 }
 
 .hero-badge-dot {
@@ -225,8 +233,9 @@ const featured = computed(
     width: min(100%, 360px);
   }
   .hero-badge {
-    left: 6px;
-    bottom: 16px;
+    bottom: 12px;
+    font-size: 0.76rem;
+    padding: 8px 14px;
   }
 }
 </style>
