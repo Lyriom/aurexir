@@ -3,6 +3,12 @@ dist
 .DS_Store
 *.local
 
+# Overrides de entorno locales. OJO: en Vite TODA variable VITE_* se embebe en
+# el bundle público → NUNCA poner secretos (claves Stripe, tokens) en un VITE_*.
+# Los secretos van solo en el backend. .env.production (URL pública) sí se versiona.
+.env.local
+.env.*.local
+
 # Playwright (artefactos de la suite E2E de qa/)
 test-results
 qa/e2e/report

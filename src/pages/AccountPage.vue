@@ -6,6 +6,7 @@ import { t, locale } from '../i18n.js'
 import { auth, logout } from '../auth.js'
 import { api, apiErrorMessage } from '../api.js'
 import { formatPrice } from '../store.js'
+import { safeHttpUrl } from '../security.js'
 
 const router = useRouter()
 
@@ -121,8 +122,8 @@ function shippingLabel(m) {
               </p>
             </div>
             <a
-              v-if="order.tracking_url"
-              :href="order.tracking_url"
+              v-if="safeHttpUrl(order.tracking_url)"
+              :href="safeHttpUrl(order.tracking_url)"
               target="_blank"
               rel="noopener noreferrer"
               class="btn btn-primary order-tracking-btn"
