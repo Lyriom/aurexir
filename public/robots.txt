@@ -1,0 +1,10 @@
+# AUREXIR — permitir el rastreo completo del sitio público.
+User-agent: *
+Allow: /
+
+# No indexar áreas privadas (son SPA, sin contenido útil para buscadores).
+Disallow: /account
+Disallow: /admin
+Disallow: /checkout/
+
+Sitemap: https://aurexir.com/sitemap.xml

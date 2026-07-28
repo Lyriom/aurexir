@@ -4,11 +4,110 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo-mark.svg?v=2" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AUREXIR — Parfum Homme</title>
+    <meta name="theme-color" content="#0a0a0b" />
+
+    <!-- ===================== SEO ===================== -->
+    <title>AUREXIR — Perfumería masculina de autor | Parfum Homme</title>
     <meta
       name="description"
-      content="AUREXIR — men's perfumery. A hand-picked selection of designer and niche fragrances. Order by WhatsApp or Instagram."
+      content="AUREXIR es una marca de perfumería masculina de autor: fragancias concentradas de diseñador y nicho, con frascos de diseño futurista. Compra segura y envío a Estados Unidos."
     />
+    <meta
+      name="keywords"
+      content="AUREXIR, perfumería masculina, perfumes de hombre, fragancias de nicho, fragancias de diseñador, eau de parfum, parfum homme, perfume de autor"
+    />
+    <meta name="author" content="AUREXIR" />
+    <link rel="canonical" href="https://aurexir.com/" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Open Graph (previsualización en redes / rastreadores de IA) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AUREXIR" />
+    <meta property="og:title" content="AUREXIR — Perfumería masculina de autor" />
+    <meta
+      property="og:description"
+      content="Fragancias masculinas de diseñador y nicho seleccionadas por AUREXIR. Perfumería de autor con envío a Estados Unidos."
+    />
+    <meta property="og:url" content="https://aurexir.com/" />
+    <meta property="og:image" content="https://aurexir.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AUREXIR — Perfumería masculina de autor" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AUREXIR — Perfumería masculina de autor" />
+    <meta
+      name="twitter:description"
+      content="Fragancias masculinas de diseñador y nicho seleccionadas por AUREXIR. Perfumería de autor."
+    />
+    <meta name="twitter:image" content="https://aurexir.com/og-image.png" />
+
+    <!-- Datos estructurados: declaran a los buscadores y a la IA que AUREXIR
+         es una MARCA DE PERFUMERÍA MASCULINA (no una entidad genérica "Aurex").
+         El catálogo de productos se añade en tiempo de ejecución (src/seo.js). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": ["Organization", "Brand"],
+            "@id": "https://aurexir.com/#organization",
+            "name": "AUREXIR",
+            "alternateName": "Aurexir",
+            "url": "https://aurexir.com/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://aurexir.com/og-image.png",
+              "width": 1200,
+              "height": 630
+            },
+            "image": "https://aurexir.com/og-image.png",
+            "description": "AUREXIR es una casa de perfumería masculina de autor: fragancias concentradas de diseñador y nicho, con frascos de diseño futurista y esencias de origen noble.",
+            "slogan": "Parfum Homme",
+            "knowsAbout": [
+              "Perfumería masculina",
+              "Fragancias de nicho",
+              "Fragancias de diseñador",
+              "Eau de parfum",
+              "Parfum Homme"
+            ],
+            "sameAs": ["https://www.instagram.com/lyriom__/"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://aurexir.com/#website",
+            "url": "https://aurexir.com/",
+            "name": "AUREXIR — Parfum Homme",
+            "description": "Tienda de perfumería masculina de autor: fragancias de diseñador y nicho.",
+            "inLanguage": ["es", "en"],
+            "publisher": { "@id": "https://aurexir.com/#organization" }
+          },
+          {
+            "@type": "OnlineStore",
+            "@id": "https://aurexir.com/#store",
+            "name": "AUREXIR",
+            "url": "https://aurexir.com/",
+            "image": "https://aurexir.com/og-image.png",
+            "description": "Tienda en línea de perfumería masculina de autor. Fragancias de diseñador y nicho seleccionadas, con pago seguro con tarjeta y envío a Estados Unidos.",
+            "brand": { "@id": "https://aurexir.com/#organization" },
+            "parentOrganization": { "@id": "https://aurexir.com/#organization" },
+            "priceRange": "$$-$$$",
+            "currenciesAccepted": "USD",
+            "paymentAccepted": "Credit Card",
+            "areaServed": { "@type": "Country", "name": "United States" },
+            "keywords": "perfumes de hombre, fragancias de nicho, eau de parfum, parfum homme, perfumería de autor"
+          }
+        ]
+      }
+    </script>
+    <!-- =============================================== -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
