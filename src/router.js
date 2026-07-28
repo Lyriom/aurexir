@@ -4,7 +4,8 @@
  * - '/'                 landing + catálogo (pública)
  * - '/login'            acceso / registro
  * - '/account'          mis pedidos (requiere sesión)
- * - '/checkout/success' vuelta de Stripe con pago OK (vacía el carrito)
+ * - '/checkout'         datos de envío + pago con tarjeta (requiere sesión)
+ * - '/checkout/success' pago OK (vacía el carrito)
  * - '/checkout/cancel'  vuelta de Stripe cancelando
  * - '/admin'            panel (requiere role=admin; carga perezosa)
  *
@@ -26,6 +27,12 @@ const routes = [
     path: '/account',
     name: 'account',
     component: () => import('./pages/AccountPage.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/checkout',
+    name: 'checkout',
+    component: () => import('./pages/CheckoutPage.vue'),
     meta: { requiresAuth: true },
   },
   {

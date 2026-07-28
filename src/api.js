@@ -55,7 +55,10 @@ export function onSessionExpired(fn) {
 async function request(path, { method = 'GET', body, auth = false } = {}) {
   if (!API_BASE) throw new ApiError('API_DISABLED', 0)
 
-  const headers = { 'Content-Type': 'application/json' }
+  // Subidas de archivo: dejamos que el navegador ponga el Content-Type con el
+  // boundary de multipart; no serializamos el cuerpo.
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData
+  const headers = isForm ? {} : { 'Content-Type': 'application/json' }
   if (auth) {
     const token = getToken()
     if (!token) throw new ApiError('NOT_AUTHENTICATED', 401)
@@ -67,7 +70,7 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
     res = await fetch(`${API_BASE}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     })
   } catch {
     // Red caída / CORS / servidor apagado.
@@ -160,7 +163,33 @@ export const api = {
   validateDiscount: (code) =>
     request('/discounts/validate', { method: 'POST', body: { code } }),
 
-  /* ---- Checkout con Stripe (requiere sesión) ---- */
+  /* ---- Checkout embebido con Stripe Payment Element (requiere sesión) ----
+   * El front recoge nombre/teléfono/dirección y confirma la tarjeta EN el sitio
+   * (Stripe Elements). Este endpoint crea el PaymentIntent en el backend, que
+   * recalcula el importe (nunca se confía en el del cliente) y devuelve el
+   * client_secret + el desglose para mostrar.
+   *   customer: { name, phone?, email, address:{ line1, line2?, city, state, postal_code, country } }
+   *     country: ISO-3166 alpha-2 EN MAYÚSCULAS ('US').
+   * → { client_secret, amount (centavos), currency:'usd', breakdown:{ subtotal, shipping, discount, total } }
+   *   401 sin sesión · 409 código inválido/ya usado · 422 sin stock o dirección incompleta.
+   * Flujo: elements.submit() → este endpoint → stripe.confirmPayment(redirect:'if_required').
+   * El pedido SIEMPRE se confirma por webhook (puede tardar unos segundos en salir
+   * como "paid" en /orders/mine); no se asume nada del redirect en /checkout/success.
+   */
+  createPaymentIntent: ({ items, shipping_method = 'standard', discount_code = null, locale = 'en', customer }) =>
+    request('/checkout/intent', {
+      method: 'POST',
+      auth: true,
+      body: {
+        items,
+        shipping_method,
+        locale,
+        customer,
+        ...(discount_code ? { discount_code } : {}),
+      },
+    }),
+
+  /* ---- Checkout hospedado con Stripe (alternativa por redirección) ---- */
   // → { checkout_url }  (redirigir el navegador a esa URL)
   // discount_code opcional; el back responde 409 si es inválido o ya usado.
   // locale: idioma para los correos (confirmación y tracking) que envía el back.
@@ -208,6 +237,13 @@ export const api = {
         },
       }),
     products: () => request('/admin/products', { auth: true }),
+    // Sube una imagen de producto (multipart). → { url } servida desde el backend.
+    // 403 no admin · 413 > 5 MB · 422 tipo no permitido / no es imagen. SVG no.
+    uploadImage: (file) => {
+      const fd = new FormData()
+      fd.append('file', file)
+      return request('/admin/uploads', { method: 'POST', auth: true, body: fd })
+    },
     createProduct: (data) =>
       request('/admin/products', { method: 'POST', auth: true, body: data }),
     updateProduct: (id, data) =>

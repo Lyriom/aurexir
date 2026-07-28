@@ -6,15 +6,12 @@ test.describe('v0.5.0 · Correos y tracking', () => {
     await suppressPromo(page)
   })
 
-  test('CP-0.5.0-01/02 checkout envía locale "es" y success menciona el correo', async ({ page, mock }) => {
+  test('CP-0.5.0-01/02 la página de éxito menciona el recibo y la factura (ES)', async ({ page, mock }) => {
+    void mock
     await setLocale(page, 'es')
-    await loginUI(page, 'cliente@test.com', 'password123')
-    await page.goto('/')
-    await addToCart(page, 'Coral Fantasy')
-    await page.click('.cart-pay')
-    await expect(page).toHaveURL(/\/checkout\/success/)
-    expect(mock.captured.checkout.at(-1).locale).toBe('es')
-    await expect(page.locator('.checkout-email')).toContainText(/correo de confirmación/i)
+    await page.goto('/checkout/success')
+    await expect(page.locator('.checkout-title')).toBeVisible()
+    await expect(page.locator('.checkout-email')).toContainText(/recibo y la factura/i)
   })
 
   test('CP-0.5.0-03/04 pedido shipped muestra tracking y botón en pestaña nueva', async ({ page }) => {

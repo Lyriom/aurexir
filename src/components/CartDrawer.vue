@@ -1,7 +1,7 @@
 <script setup>
 // Panel lateral del carrito. Estado y acciones vienen de store.js.
-// Con backend activo añade: cotización de envío (tarifa plana por método) y
-// pago con tarjeta vía Stripe Checkout (requiere sesión). WhatsApp sigue vivo.
+// Con backend activo añade: cotización de envío (tarifa plana por método) y el
+// botón "Ir a pagar" → página /checkout (datos + tarjeta). WhatsApp sigue vivo.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { t, locale } from '../i18n.js'
@@ -23,8 +23,10 @@ import {
   discountAmount,
   applyDiscount,
   removeDiscount,
+  shippingMethod,
+  setShippingMethod,
 } from '../store.js'
-import { api, cartToPayload, apiErrorMessage, ApiError } from '../api.js'
+import { api, cartToPayload, apiErrorMessage } from '../api.js'
 import { API_BASE } from '../config.js'
 import { auth } from '../auth.js'
 
@@ -53,7 +55,6 @@ watch(
 // Tarifas planas que se muestran en cada opción (el importe cobrado lo confirma
 // el back en el quote; sobre el umbral de envío gratis la línea marca GRATIS).
 const SHIPPING_RATES = { standard: 20, eco: 30 }
-const method = ref('standard')
 const quote = ref(null)
 const quoteLoading = ref(false)
 const quoteError = ref('')
@@ -68,7 +69,7 @@ async function requestQuote() {
   try {
     quote.value = await api.quoteShipping({
       items: cartToPayload(cart.items),
-      method: method.value,
+      method: shippingMethod.value,
     })
   } catch (e) {
     quote.value = null
@@ -86,7 +87,7 @@ function scheduleQuote() {
 
 // Cotiza al abrir el carrito y cuando cambian el método o las cantidades.
 watch(
-  [() => cart.open, method, cartTotal],
+  [() => cart.open, shippingMethod, cartTotal],
   () => {
     if (cart.open && apiEnabled && cart.items.length) scheduleQuote()
     else quote.value = null
@@ -134,46 +135,16 @@ const estimatedTotal = computed(() => {
   )
 })
 
-/* ---- Pago con tarjeta (Stripe Checkout hospedado) ---- */
-const checkoutLoading = ref(false)
-const checkoutError = ref('')
-
-async function payWithCard() {
-  checkoutError.value = ''
+/* ---- Ir a pagar ---- */
+// El pago (datos de envío + tarjeta) ocurre en la página /checkout. Aquí solo
+// llevamos allí; si no hay sesión, pasamos por el login y volvemos a /checkout.
+function goToCheckout() {
+  closeCart()
   if (!auth.user) {
-    // Sin sesión: al volver del login, /#cart reabre el drawer.
-    closeCart()
-    router.push({ path: '/login', query: { next: '/#cart' } })
+    router.push({ path: '/login', query: { next: '/checkout' } })
     return
   }
-  checkoutLoading.value = true
-  try {
-    const { checkout_url } = await api.createCheckoutSession({
-      items: cartToPayload(cart.items),
-      shipping_method: method.value,
-      discount_code: discount.value?.code || null,
-      locale: locale.value,
-    })
-    window.location.href = checkout_url
-  } catch (e) {
-    checkoutLoading.value = false
-    if (e instanceof ApiError && (e.message === 'SESSION_EXPIRED' || e.message === 'NOT_AUTHENTICATED')) {
-      closeCart()
-      router.push({ path: '/login', query: { next: '/#cart' } })
-      return
-    }
-    // 409 por código inválido/ya usado → mostrar el detalle y desaplicarlo.
-    if (
-      e instanceof ApiError &&
-      e.status === 409 &&
-      discount.value &&
-      typeof e.detail === 'string' &&
-      /c[oó]digo|descuento|discount/i.test(e.detail)
-    ) {
-      removeDiscount()
-    }
-    checkoutError.value = apiErrorMessage(e)
-  }
+  router.push('/checkout')
 }
 
 // Mensaje de la barra de envío gratis (con el monto restante interpolado).
@@ -327,10 +298,10 @@ onUnmounted(() => {
                 <button
                   type="button"
                   class="cart-ship-opt"
-                  :class="{ active: method === 'standard' }"
+                  :class="{ active: shippingMethod === 'standard' }"
                   role="radio"
-                  :aria-checked="method === 'standard'"
-                  @click="method = 'standard'"
+                  :aria-checked="shippingMethod === 'standard'"
+                  @click="setShippingMethod('standard')"
                 >
                   <span class="cart-ship-opt-top">
                     <span class="cart-ship-opt-name">{{ t('cart.methodStandard') }}</span>
@@ -341,10 +312,10 @@ onUnmounted(() => {
                 <button
                   type="button"
                   class="cart-ship-opt cart-ship-opt--eco"
-                  :class="{ active: method === 'eco' }"
+                  :class="{ active: shippingMethod === 'eco' }"
                   role="radio"
-                  :aria-checked="method === 'eco'"
-                  @click="method = 'eco'"
+                  :aria-checked="shippingMethod === 'eco'"
+                  @click="setShippingMethod('eco')"
                 >
                   <span class="cart-ship-opt-top">
                     <span class="cart-ship-opt-name">🌿 {{ t('cart.methodEco') }}</span>
@@ -372,20 +343,18 @@ onUnmounted(() => {
 
             <p class="cart-note">{{ apiEnabled ? t('cart.payNote') : t('cart.note') }}</p>
 
-            <p v-if="checkoutError" class="cart-error">{{ checkoutError }}</p>
             <button
               v-if="apiEnabled"
               type="button"
               class="cart-pay"
-              :disabled="checkoutLoading"
-              @click="payWithCard"
+              @click="goToCheckout"
             >
               <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
                 <path d="M2.5 9.5h19" />
                 <path d="M6.5 14.5h4" />
               </svg>
-              {{ checkoutLoading ? t('cart.paying') : auth.user ? t('cart.payCard') : t('cart.loginToPay') }}
+              {{ auth.user ? t('cart.goCheckout') : t('cart.loginToPay') }}
             </button>
             <p v-if="apiEnabled" class="cart-or">{{ t('cart.orWhatsApp') }}</p>
             <a

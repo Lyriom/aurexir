@@ -54,6 +54,37 @@ const formError = ref('')
 const saving = ref(false)
 const editingId = ref(null) // null = crear
 
+/* ---- Subida de imagen (POST /admin/uploads) ---- */
+const MAX_IMAGE_MB = 5
+const ALLOWED_IMAGE = ['image/webp', 'image/jpeg', 'image/png']
+const uploading = ref(false)
+const uploadError = ref('')
+
+async function onImageFile(e) {
+  const file = e.target.files?.[0]
+  e.target.value = '' // permite re-subir el mismo archivo
+  if (!file) return
+  uploadError.value = ''
+  // Validación en cliente (el backend re-valida: 413 tamaño, 422 tipo).
+  if (!ALLOWED_IMAGE.includes(file.type)) {
+    uploadError.value = t('admin.imageType')
+    return
+  }
+  if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+    uploadError.value = t('admin.imageTooBig')
+    return
+  }
+  uploading.value = true
+  try {
+    const res = await api.admin.uploadImage(file)
+    if (res?.url) form.image = res.url
+  } catch (err) {
+    uploadError.value = apiErrorMessage(err)
+  } finally {
+    uploading.value = false
+  }
+}
+
 const form = reactive({
   id: '',
   name: '',
@@ -298,9 +329,34 @@ async function saveStock() {
           </label>
           <label class="admin-field">
             <span>{{ t('admin.image') }}</span>
-            <input v-model="form.image" class="admin-input" type="text" required placeholder="/perfumes/mi-perfume-1.webp" />
+            <div class="image-upload">
+              <div class="image-preview" :class="{ empty: !form.image }">
+                <img v-if="form.image" :src="form.image" alt="" />
+                <span v-else>—</span>
+              </div>
+              <div class="image-upload-controls">
+                <input
+                  id="admin-image-file"
+                  class="image-file"
+                  type="file"
+                  accept="image/webp,image/jpeg,image/png"
+                  @change="onImageFile"
+                />
+                <label for="admin-image-file" class="admin-btn image-upload-btn">
+                  {{ uploading ? t('admin.uploading') : t('admin.uploadImage') }}
+                </label>
+                <input
+                  v-model="form.image"
+                  class="admin-input"
+                  type="text"
+                  required
+                  :placeholder="t('admin.imageUrlHint')"
+                />
+              </div>
+            </div>
           </label>
         </div>
+        <p v-if="uploadError" class="admin-error">{{ uploadError }}</p>
 
         <div class="admin-field-row">
           <label class="admin-field">
@@ -425,5 +481,56 @@ async function saveStock() {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* Subida de imagen */
+.image-upload {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.image-preview {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background-color: #090a0e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview.empty {
+  color: var(--text-muted);
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-upload-controls {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.image-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.image-upload-btn {
+  align-self: flex-start;
+  cursor: pointer;
 }
 </style>

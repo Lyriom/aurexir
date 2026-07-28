@@ -70,7 +70,8 @@ export function createState() {
     subscribers: new Set(['exists@test.com']),
     loginAttempts: [], // timestamps (ms)
     validCodes: { 'AURX15-TEST01': 15, 'AURX15-USED77': 15 }, // USED77 falla al pagar (409)
-    captured: { checkout: [], quote: [], newsletter: [], tracking: [] },
+    uploadSeq: 0,
+    captured: { checkout: [], intent: [], quote: [], newsletter: [], tracking: [] },
   }
 }
 
@@ -167,6 +168,35 @@ function dispatch(state, { method, path, query, body, auth }) {
     return { status: 200, body: { valid: false, code, percent: 0 } }
   }
 
+  if (method === 'POST' && path === '/checkout/intent') {
+    const u = userFromAuth(state, auth)
+    if (!u) return { status: 401, body: { detail: 'Not authenticated' } }
+    state.captured.intent.push(body)
+    if (body.discount_code === 'AURX15-USED77') {
+      return { status: 409, body: { detail: 'Código de descuento inválido o ya usado' } }
+    }
+    // Importe autoritativo (mismo cálculo que el quote + descuento).
+    const rates = { standard: 20, eco: 30 }
+    let subtotal = 0
+    for (const it of body.items || []) {
+      const p = state.products.find((x) => x.id === it.id)
+      if (p) subtotal += p.price * it.qty
+    }
+    const shipping = subtotal >= 200 ? 0 : rates[body.shipping_method] ?? 20
+    const pct = state.validCodes[body.discount_code] || 0
+    const discount = Math.round(subtotal * pct) / 100
+    const total = Math.round((subtotal - discount + shipping) * 100) / 100
+    return {
+      status: 200,
+      body: {
+        client_secret: 'pi_mock_secret_123',
+        amount: Math.round(total * 100),
+        currency: 'usd',
+        breakdown: { subtotal, shipping, discount, total },
+      },
+    }
+  }
+
   if (method === 'POST' && path === '/checkout/session') {
     const u = userFromAuth(state, auth)
     if (!u) return { status: 401, body: { detail: 'Not authenticated' } }
@@ -206,6 +236,12 @@ function dispatch(state, { method, path, query, body, auth }) {
       return { status: 200, body: data }
     }
     if (method === 'GET' && path === '/admin/products') return { status: 200, body: state.products }
+
+    // Subida de imagen (multipart): el mock ignora el binario y devuelve una URL.
+    if (method === 'POST' && path === '/admin/uploads') {
+      state.uploadSeq += 1
+      return { status: 201, body: { url: `${BASE}/media/perfumes/mock-${state.uploadSeq}.webp` } }
+    }
 
     if (method === 'POST' && path === '/admin/products') {
       const p = { stock: 0, active: true, ...body }

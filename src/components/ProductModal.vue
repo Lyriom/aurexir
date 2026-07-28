@@ -1,9 +1,13 @@
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
-import { instagramLink, openInstagramOrder, whatsappLink } from '../config.js'
+import { useRouter } from 'vue-router'
+import { instagramLink, openInstagramOrder, whatsappLink, API_BASE } from '../config.js'
 import { locale, t } from '../i18n.js'
-import { addToCart, formatPrice } from '../store.js'
+import { addToCart, buyNow, formatPrice } from '../store.js'
 import { isOutOfStock } from '../catalog.js'
+
+const router = useRouter()
+const apiEnabled = Boolean(API_BASE)
 
 const props = defineProps({
   product: {
@@ -48,6 +52,14 @@ function onAdd() {
   added.value = true
   if (addedTimer) clearTimeout(addedTimer)
   addedTimer = setTimeout(() => (added.value = false), 1400)
+}
+
+// Compra con un clic: añade el producto y va directo al checkout.
+function onBuyNow() {
+  if (!props.product || soldOut.value) return
+  buyNow(props.product)
+  close()
+  router.push('/checkout')
 }
 
 function close() {
@@ -145,9 +157,22 @@ onUnmounted(() => {
             </div>
 
             <button
+              v-if="apiEnabled"
+              type="button"
+              class="modal-buy"
+              :disabled="soldOut"
+              @click="onBuyNow"
+            >
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M13 2L4.5 13H11l-1 9 8.5-11H12z" />
+              </svg>
+              {{ soldOut ? t('tags.soldOut') : t('product.buyNow') }}
+            </button>
+
+            <button
               type="button"
               class="modal-add"
-              :class="{ 'is-added': added }"
+              :class="{ 'is-added': added, 'modal-add--secondary': apiEnabled }"
               :disabled="soldOut"
               @click="onAdd"
             >
@@ -163,7 +188,7 @@ onUnmounted(() => {
               {{ soldOut ? t('tags.soldOut') : added ? t('product.added') : t('product.addToCart') }}
             </button>
 
-            <p class="modal-note">{{ t('product.orderNote') }}</p>
+            <p class="modal-note">{{ apiEnabled ? t('product.buyNote') : t('product.orderNote') }}</p>
 
             <div class="modal-actions">
               <a
@@ -473,6 +498,36 @@ onUnmounted(() => {
 }
 
 /* Añadir al carrito */
+/* Comprar ahora (acción principal con backend activo) */
+.modal-buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 52px;
+  margin: 0 0 10px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--gold-grad);
+  color: var(--accent-contrast);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: filter var(--transition), transform var(--transition);
+}
+
+.modal-buy:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+.modal-buy:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .modal-add {
   display: flex;
   align-items: center;
@@ -490,6 +545,17 @@ onUnmounted(() => {
   font-size: 1rem;
   cursor: pointer;
   transition: background-color var(--transition), transform var(--transition);
+}
+
+/* Cuando "Comprar ahora" es la acción principal, "Añadir" pasa a secundario. */
+.modal-add--secondary {
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.modal-add--secondary:hover {
+  background-color: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .modal-add:hover {

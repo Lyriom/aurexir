@@ -77,21 +77,8 @@ test.describe('v0.3.0 · Descuento de bienvenida', () => {
     await expect(page.locator('.cart-code-input')).toBeVisible()
   })
 
-  test('CP-0.3.0-10 409 al pagar desaplica el código', async ({ page, mock }) => {
+  test('CP-0.3.0-10 el código aplicado viaja a /checkout y se puede quitar del resumen', async ({ page, mock }) => {
     void mock
-    await suppressPromo(page)
-    await loginUI(page, 'cliente@test.com', 'password123')
-    await page.goto('/')
-    await addToCart(page, 'Coral Fantasy')
-    await page.fill('.cart-code-input', 'AURX15-USED77')
-    await page.click('.cart-code-btn')
-    await expect(page.locator('.cart-discount')).toBeVisible()
-    await page.click('.cart-pay')
-    await expect(page.locator('.cart-error')).toContainText(/inválido o ya usado/i)
-    await expect(page.locator('.cart-discount')).toHaveCount(0)
-  })
-
-  test('CP-0.3.0-11 pago OK envía discount_code y limpia al éxito', async ({ page, mock }) => {
     await suppressPromo(page)
     await loginUI(page, 'cliente@test.com', 'password123')
     await page.goto('/')
@@ -100,10 +87,27 @@ test.describe('v0.3.0 · Descuento de bienvenida', () => {
     await page.click('.cart-code-btn')
     await expect(page.locator('.cart-discount')).toBeVisible()
     await page.click('.cart-pay')
-    await expect(page).toHaveURL(/\/checkout\/success/)
-    await expect(page.locator('.checkout-title')).toBeVisible() // espera onMounted (clearCart)
-    expect(mock.captured.checkout.at(-1).discount_code).toBe('AURX15-TEST01')
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('aurexir-discount'))).toBeNull()
+    await expect(page).toHaveURL(/\/checkout$/)
+    // El descuento aparece en el resumen del checkout…
+    await expect(page.locator('.co-discount')).toContainText('AURX15-TEST01')
+    // …y se puede quitar desde ahí.
+    await page.click('.co-discount .co-code-remove')
+    await expect(page.locator('.co-discount')).toHaveCount(0)
+  })
+
+  test('CP-0.3.0-11 /checkout muestra la línea de descuento y el total con descuento', async ({ page, mock }) => {
+    void mock
+    await suppressPromo(page)
+    await loginUI(page, 'cliente@test.com', 'password123')
+    await page.goto('/')
+    await addToCart(page, 'Coral Fantasy') // $130
+    await page.fill('.cart-code-input', 'AURX15-TEST01')
+    await page.click('.cart-code-btn')
+    await page.click('.cart-pay')
+    await expect(page).toHaveURL(/\/checkout$/)
+    // −15% de $130 = −$19.50; envío estándar $20 → total = 130 − 19.50 + 20 = $130.50
+    await expect(page.locator('.co-discount')).toContainText('−$19.50')
+    await expect(page.locator('.co-total')).toContainText('$130.50')
   })
 
   test('CP-0.3.0-12 descuento visible en Mis pedidos', async ({ page, mock }) => {

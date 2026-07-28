@@ -18,11 +18,15 @@ documentos. Backend simulado por interceptación de red → la suite es
 autocontenida (no necesita la API real).
 
 ```bash
-npm run test:e2e          # 45 casos, ~1 min (headless, Chrome del sistema)
+npm run test:e2e          # 50 casos, headless, Chrome del sistema
 npm run test:e2e -- -g CP-0.5.0-08   # un caso por ID
 ```
 
-Última ejecución local: **45/45 en verde**. Ver [`qa/e2e/README.md`](e2e/README.md).
+Última ejecución local: **50/50 en verde**. Ver [`qa/e2e/README.md`](e2e/README.md).
+
+> El **cobro real con Stripe** (Payment Element embebido) es un servicio externo
+> y no se ejercita en la suite autocontenida; los casos `CP-0.6.0-10…14` (🟡) se
+> verifican en staging con Stripe test mode contra el backend real.
 
 Convenciones de IDs:
 - `CA-<ver>-NN` → Criterio de Aceptación (p. ej. `CA-0.2.0-03`).
@@ -48,8 +52,9 @@ Convenciones de IDs:
 | [v0.3.0](v0.3.0_2026-07-15_descuento-bienvenida/) | 2026-07-15 | `ef2eac6` | Descuento de bienvenida 15%: popup de captura de email, código en el carrito, línea de descuento en pedidos | `PromoModal.vue`, `newsletter.js`, `store.js`, `CartDrawer.vue`, `AccountPage.vue`, `admin/AdminOrders.vue` |
 | [v0.4.0](v0.4.0_2026-07-15_envios-standard-eco/) | 2026-07-15 | `f5b1498` | Nuevo sistema de envíos: Standard $20 / Eco $30, sin ZIP, cotización automática | `api.js`, `CartDrawer.vue`, `i18n.js`, `AccountPage.vue`, `admin/AdminOrders.vue` |
 | [v0.5.0](v0.5.0_2026-07-17_correos-y-tracking/) | 2026-07-17 | `5ccae56` | Correos de pedido (envío de `locale` en checkout) y seguimiento de envíos (bloque de tracking en "Mis pedidos" + alta/edición en admin) | `api.js`, `CartDrawer.vue`, `CheckoutSuccessPage.vue`, `AccountPage.vue`, `admin/AdminOrders.vue` |
+| [v0.6.0](v0.6.0_2026-07-27_checkout-embebido/) | 2026-07-27 | _pendiente_ | Checkout embebido con **Stripe Payment Element** (tarjeta dentro del sitio) + página `/checkout` con datos de envío, compra con un clic ("Comprar ahora"), y correo de recibo + factura PDF. Requiere backend nuevo (ver `BACKEND_PROMPT_checkout-inventario.md`) | `pages/CheckoutPage.vue`, `stripe.js`, `security.js`, `api.js`, `store.js`, `router.js`, `CartDrawer.vue`, `ProductModal.vue`, `nginx.conf` |
 
-Versión actual del producto: **v0.5.0**.
+Versión actual del producto: **v0.6.0**.
 
 ---
 

@@ -102,6 +102,34 @@ export const cartTotalAfterDiscount = computed(
   () => Math.round((cartTotal.value - discountAmount.value) * 100) / 100
 )
 
+/* ---- Método de envío seleccionado (compartido carrito ↔ checkout) ---- */
+// 'standard' | 'eco'. Se comparte para que la página /checkout use el mismo que
+// eligió el cliente en el carrito. Persistido para sobrevivir recargas.
+const METHOD_KEY = 'aurexir-ship-method'
+
+function loadMethod() {
+  if (typeof window === 'undefined') return 'standard'
+  try {
+    const v = window.localStorage.getItem(METHOD_KEY)
+    return v === 'eco' || v === 'standard' ? v : 'standard'
+  } catch {
+    return 'standard'
+  }
+}
+
+export const shippingMethod = ref(loadMethod())
+
+export function setShippingMethod(method) {
+  const next = method === 'eco' ? 'eco' : 'standard'
+  shippingMethod.value = next
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(METHOD_KEY, next)
+  } catch {
+    /* almacenamiento no disponible */
+  }
+}
+
 /* ---- Envío gratis (mercado EE. UU.) ---- */
 // Cuánto falta para el envío gratis y % de progreso hacia el umbral.
 // Nota: el umbral se evalúa sobre el subtotal SIN descuento (regla del back).
@@ -128,6 +156,24 @@ export function addToCart(product, qty = 1) {
     })
   }
   cart.open = true
+  persist()
+}
+
+// Compra con un clic: añade el producto (sin abrir el drawer) para ir directo a
+// /checkout. La navegación la hace el componente (necesita el router).
+export function buyNow(product, qty = 1) {
+  const existing = cart.items.find((i) => i.id === product.id)
+  if (existing) existing.qty += qty
+  else
+    cart.items.push({
+      id: product.id,
+      name: product.name,
+      brand: product.brand,
+      price: product.price,
+      image: product.image,
+      qty,
+    })
+  cart.open = false
   persist()
 }
 

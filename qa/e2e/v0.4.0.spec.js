@@ -61,14 +61,17 @@ test.describe('v0.4.0 · Envíos Standard/Eco', () => {
     await expect(page.locator('.cart-shipline .is-free')).toContainText(/free|gratis/i)
   })
 
-  test('CP-0.4.0-07 checkout envía shipping_method "eco"', async ({ page, mock }) => {
+  test('CP-0.4.0-07 el método eco elegido en el carrito viaja a /checkout', async ({ page, mock }) => {
+    void mock
     await loginUI(page, 'cliente@test.com', 'password123')
     await page.goto('/')
-    await addToCart(page, 'Coral Fantasy')
+    await addToCart(page, 'Coral Fantasy') // $130
     await page.locator('.cart-ship-opt', { hasText: /eco/i }).click()
     await page.click('.cart-pay')
-    await expect(page).toHaveURL(/\/checkout\/success/)
-    expect(mock.captured.checkout.at(-1).shipping_method).toBe('eco')
+    await expect(page).toHaveURL(/\/checkout$/)
+    // Eco queda seleccionado y el resumen usa $30 de envío → total $160.
+    await expect(page.locator('.co-method--eco.active')).toBeVisible()
+    await expect(page.locator('.co-total')).toContainText('$160.00')
   })
 
   test('CP-0.4.0-08 pedidos: etiqueta standard/eco/express', async ({ page }) => {

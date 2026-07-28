@@ -29,16 +29,16 @@ test.describe('v0.2.0 · Backend, auth, checkout, admin', () => {
     await expect(page).toHaveURL(/\/login/)
   })
 
-  test('CP-0.2.0-05 checkout como invitado vuelve al carrito tras login', async ({ page }) => {
+  test('CP-0.2.0-05 checkout como invitado pide login y va a /checkout', async ({ page }) => {
     await page.goto('/')
     await addToCart(page, 'Coral Fantasy')
-    await page.click('.cart-pay')
+    await page.click('.cart-pay') // "Iniciar sesión para pagar"
     await expect(page).toHaveURL(/\/login/)
     await page.fill('.auth-card input[type=email]', 'cliente@test.com')
     await page.fill('.auth-card input[type=password]', 'password123')
     await page.click('.auth-submit')
-    await expect(page).toHaveURL(/#cart/)
-    await expect(page.locator('.cart')).toBeVisible()
+    await expect(page).toHaveURL(/\/checkout$/)
+    await expect(page.locator('.checkout-grid')).toBeVisible()
   })
 
   test('CP-0.2.0-06 rate limit 429 en login', async ({ page, mock }) => {
@@ -74,13 +74,14 @@ test.describe('v0.2.0 · Backend, auth, checkout, admin', () => {
     await expect(page).not.toHaveURL(/\/admin/)
   })
 
-  test('CP-0.2.0-11 checkout con sesión → success y vacía carrito', async ({ page }) => {
+  test('CP-0.2.0-11 con sesión, "Ir a pagar" abre /checkout con el resumen', async ({ page }) => {
     await loginUI(page, 'cliente@test.com', 'password123')
     await page.goto('/')
     await addToCart(page, 'Coral Fantasy')
     await page.click('.cart-pay')
-    await expect(page).toHaveURL(/\/checkout\/success/)
-    await expect(page.locator('.cart-btn .cart-count')).toHaveCount(0)
+    await expect(page).toHaveURL(/\/checkout$/)
+    await expect(page.locator('.co-summary')).toBeVisible()
+    await expect(page.locator('.co-item')).toContainText('Coral Fantasy')
   })
 
   test('CP-0.2.0-12 mis pedidos: número, estado y total', async ({ page }) => {
