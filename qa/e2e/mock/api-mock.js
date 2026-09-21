@@ -204,7 +204,20 @@ function dispatch(state, { method, path, query, body, auth }) {
     if (body.discount_code === 'AURX15-USED77') {
       return { status: 409, body: { detail: 'Código de descuento inválido o ya usado' } }
     }
-    return { status: 200, body: { checkout_url: body.success_url || `${BASE}/checkout/success` } }
+    const success = (body.success_url || `${BASE}/checkout/success`).replace(
+      '{CHECKOUT_SESSION_ID}',
+      'cs_test_mock',
+    )
+    return { status: 200, body: { checkout_url: success } }
+  }
+
+  if (method === 'GET' && path === '/checkout/session/cs_test_mock') {
+    const u = userFromAuth(state, auth)
+    if (!u) return { status: 401, body: { detail: 'Not authenticated' } }
+    return {
+      status: 200,
+      body: { order_number: 'AX-MOCK', order_status: 'paid', payment_status: 'paid' },
+    }
   }
 
   // ---- Admin ----

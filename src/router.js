@@ -5,7 +5,7 @@
  * - '/login'            acceso / registro
  * - '/account'          mis pedidos (requiere sesión)
  * - '/checkout'         datos de envío + pago con tarjeta (requiere sesión)
- * - '/checkout/success' pago OK (vacía el carrito)
+ * - '/checkout/success' verifica la sesión Stripe y, si está pagada, vacía el carrito
  * - '/checkout/cancel'  vuelta de Stripe cancelando
  * - '/admin'            panel (requiere role=admin; carga perezosa)
  *

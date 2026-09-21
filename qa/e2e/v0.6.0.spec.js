@@ -1,12 +1,11 @@
-// v0.6.0 — Checkout embebido (datos de envío + pago con tarjeta) y compra con
+// v0.6.0 — Stripe Checkout alojado y compra con
 // un clic. Ver qa/v0.6.0_2026-07-27_checkout-embebido/.
 //
-// El cargo real con Stripe (Payment Element) es externo y NO se ejercita en esta
-// suite autocontenida: se verifica en staging con Stripe test mode. Aquí se cubre
-// el flujo hasta el límite del pago (guard, resumen, datos, degradación sin clave).
+// El cargo real es externo y NO se ejercita en esta suite autocontenida: el mock
+// simula el retorno de Stripe y la verificación server-side de la sesión.
 import { test, expect, suppressPromo, loginUI, addToCart } from './fixtures.js'
 
-test.describe('v0.6.0 · Checkout embebido y compra con un clic', () => {
+test.describe('v0.6.0 · Stripe Checkout y compra con un clic', () => {
   test.beforeEach(async ({ page }) => {
     await suppressPromo(page)
   })
@@ -35,27 +34,28 @@ test.describe('v0.6.0 · Checkout embebido y compra con un clic', () => {
     await expect(page.locator('.co-total')).toContainText('$150.00')
   })
 
-  test('CP-0.6.0-04 formulario de envío presente y nombre precargado de la cuenta', async ({ page }) => {
+  test('CP-0.6.0-04 explica que dirección y pago se completan en Stripe', async ({ page }) => {
     await loginUI(page, 'cliente@test.com', 'password123')
     await page.goto('/')
     await addToCart(page, 'Coral Fantasy')
     await page.click('.cart-pay')
     await expect(page).toHaveURL(/\/checkout$/)
-    const main = page.locator('.checkout-main')
-    await expect(main.locator('input[autocomplete="name"]')).toHaveValue('Cliente Test')
-    await expect(main.locator('input[autocomplete="tel"]')).toBeVisible()
-    await expect(main.locator('input[autocomplete="address-line1"]')).toBeVisible()
-    await expect(main.locator('input[autocomplete="postal-code"]')).toBeVisible()
+    await expect(page.locator('.co-stripe-panel')).toContainText('Stripe Checkout')
+    await expect(page.locator('.co-stripe-panel')).toContainText(/address, phone and payment/i)
   })
 
-  test('CP-0.6.0-05 sin clave Stripe: aviso "pago no disponible" y botón deshabilitado', async ({ page }) => {
+  test('CP-0.6.0-05 crea sesión, verifica el pago y vacía el carrito', async ({ page, mock }) => {
     await loginUI(page, 'cliente@test.com', 'password123')
     await page.goto('/')
     await addToCart(page, 'Coral Fantasy')
     await page.click('.cart-pay')
     await expect(page).toHaveURL(/\/checkout$/)
-    // El dev server de la suite no define VITE_STRIPE_PUBLISHABLE_KEY.
-    await expect(page.locator('.co-note--warn')).toBeVisible()
-    await expect(page.locator('.co-pay')).toBeDisabled()
+    await expect(page.locator('.co-pay')).toBeEnabled()
+    await page.locator('.co-pay').click()
+    await expect(page).toHaveURL(/\/checkout\/success\?session_id=cs_test_mock/)
+    await expect(page.locator('.checkout-icon--paid')).toBeVisible()
+    expect(mock.captured.checkout).toHaveLength(1)
+    const items = await page.evaluate(() => JSON.parse(localStorage.getItem('aurexir-cart') || '[]'))
+    expect(items).toEqual([])
   })
 })

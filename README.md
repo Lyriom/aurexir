@@ -1,7 +1,8 @@
 # AUREXIR — Landing
 
-Landing page de la marca de perfumes masculinos **AUREXIR**. Maqueta solo
-front-end construida con **Vue 3 + Vite**: catálogo estático, sin backend.
+Tienda de la marca de perfumes masculinos **AUREXIR**, construida con Vue 3 y
+Vite. Se conecta al API FastAPI (`aurexir_back`) para catálogo, cuentas,
+inventario, descuentos y Stripe Checkout.
 
 ## Paleta
 
@@ -24,5 +25,7 @@ npm run preview  # sirve el build
 
 ## Configuración
 
+- `.env.production` — `VITE_API_URL=https://api.aurexir.com`. No lleva claves de
+  Stripe: Checkout se crea en el backend y se abre en el sitio alojado por Stripe.
 - `src/config.js` — número de WhatsApp y DM de Instagram para los pedidos.
 - `src/data/products.js` — catálogo de fragancias (nombre, línea, notas, precios).

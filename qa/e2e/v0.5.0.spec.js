@@ -9,7 +9,8 @@ test.describe('v0.5.0 · Correos y tracking', () => {
   test('CP-0.5.0-01/02 la página de éxito menciona el recibo y la factura (ES)', async ({ page, mock }) => {
     void mock
     await setLocale(page, 'es')
-    await page.goto('/checkout/success')
+    await loginUI(page, 'cliente@test.com', 'password123')
+    await page.goto('/checkout/success?session_id=cs_test_mock')
     await expect(page.locator('.checkout-title')).toBeVisible()
     await expect(page.locator('.checkout-email')).toContainText(/recibo y la factura/i)
   })

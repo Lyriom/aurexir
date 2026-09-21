@@ -163,33 +163,7 @@ export const api = {
   validateDiscount: (code) =>
     request('/discounts/validate', { method: 'POST', body: { code } }),
 
-  /* ---- Checkout embebido con Stripe Payment Element (requiere sesión) ----
-   * El front recoge nombre/teléfono/dirección y confirma la tarjeta EN el sitio
-   * (Stripe Elements). Este endpoint crea el PaymentIntent en el backend, que
-   * recalcula el importe (nunca se confía en el del cliente) y devuelve el
-   * client_secret + el desglose para mostrar.
-   *   customer: { name, phone?, email, address:{ line1, line2?, city, state, postal_code, country } }
-   *     country: ISO-3166 alpha-2 EN MAYÚSCULAS ('US').
-   * → { client_secret, amount (centavos), currency:'usd', breakdown:{ subtotal, shipping, discount, total } }
-   *   401 sin sesión · 409 código inválido/ya usado · 422 sin stock o dirección incompleta.
-   * Flujo: elements.submit() → este endpoint → stripe.confirmPayment(redirect:'if_required').
-   * El pedido SIEMPRE se confirma por webhook (puede tardar unos segundos en salir
-   * como "paid" en /orders/mine); no se asume nada del redirect en /checkout/success.
-   */
-  createPaymentIntent: ({ items, shipping_method = 'standard', discount_code = null, locale = 'en', customer }) =>
-    request('/checkout/intent', {
-      method: 'POST',
-      auth: true,
-      body: {
-        items,
-        shipping_method,
-        locale,
-        customer,
-        ...(discount_code ? { discount_code } : {}),
-      },
-    }),
-
-  /* ---- Checkout hospedado con Stripe (alternativa por redirección) ---- */
+  /* ---- Checkout alojado por Stripe (requiere sesión) ---- */
   // → { checkout_url }  (redirigir el navegador a esa URL)
   // discount_code opcional; el back responde 409 si es inválido o ya usado.
   // locale: idioma para los correos (confirmación y tracking) que envía el back.
@@ -202,10 +176,15 @@ export const api = {
         shipping_method,
         locale,
         ...(discount_code ? { discount_code } : {}),
-        success_url: `${window.location.origin}/checkout/success`,
+        success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${window.location.origin}/checkout/cancel`,
       },
     }),
+
+  // Verifica en el backend que la Checkout Session pertenece al usuario y que
+  // Stripe la reporta como pagada. Se usa antes de vaciar el carrito.
+  checkoutSessionStatus: (sessionId) =>
+    request(`/checkout/session/${encodeURIComponent(sessionId)}`, { auth: true }),
 
   /* ---- Pedidos del cliente ---- */
   myOrders: () => request('/orders/mine', { auth: true }),

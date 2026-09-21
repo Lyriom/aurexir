@@ -78,22 +78,3 @@ export function adminRow(page, number) {
 export function shipAmount(page) {
   return page.locator('.cart-shipline', { hasText: /shipping|env[ií]o/i }).locator('span').last()
 }
-
-// Rellena el formulario de datos de envío de la página /checkout.
-export async function fillCheckoutForm(page, over = {}) {
-  const f = {
-    name: 'Cliente Test',
-    phone: '+1 555 123 4567',
-    line1: '123 Fifth Ave',
-    city: 'New York',
-    state: 'NY',
-    postalCode: '10001',
-    ...over,
-  }
-  await page.locator('.checkout-main .co-field input[autocomplete="name"]').fill(f.name)
-  await page.locator('.checkout-main .co-field input[autocomplete="tel"]').fill(f.phone)
-  await page.locator('.checkout-main .co-field input[autocomplete="address-line1"]').fill(f.line1)
-  await page.locator('.checkout-main .co-field input[autocomplete="address-level2"]').fill(f.city)
-  await page.locator('.checkout-main .co-field input[autocomplete="address-level1"]').fill(f.state)
-  await page.locator('.checkout-main .co-field input[autocomplete="postal-code"]').fill(f.postalCode)
-}

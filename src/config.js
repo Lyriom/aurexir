@@ -18,14 +18,6 @@ export const INSTAGRAM_DM_URL = 'https://ig.me/m/lyriom__'
  */
 export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
-/*
- * Clave PUBLICABLE de Stripe (pk_live_… / pk_test_…). Es pública por diseño:
- * puede ir en el bundle del front. NUNCA la clave secreta (sk_…), que vive solo
- * en el backend. Si está vacía, el checkout con tarjeta se muestra como "pago no
- * disponible" en lugar de romper.
- */
-export const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ''
-
 // Umbral de envío gratis en USD (mercado EE. UU.). Mantener en sync con el back.
 export const FREE_SHIPPING_THRESHOLD = 200
 
